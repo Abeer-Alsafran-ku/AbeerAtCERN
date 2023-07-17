@@ -50,6 +50,15 @@ MPIData is a struct that encapsulates the various data needed for MPI processing
 
 Example of command line execution:
 
-mpirun -n 3 cleanMPI1 -s 10 -f 12345 -i 2
+* mpicxx cleanMPI.cc -o cleanMPI1
+* mpirun -n 3 cleanMPI1 -s 10 -f 12345 -i 2
+
+Or:
+
+* make one <- for running the nonBlockingScatter() 
+* make two <- for running the blockingScatter()
+* make three <- for running the nonBlockingSend()
+* make four <- for running the blockingSend()
+
 
 Please adapt the implementation according to your needs for optimal utility.
