@@ -1,6 +1,7 @@
 
-EXECS: cleanMPI1 cleanMPI2
-all: cleanMPI1 cleanMPI2 
+EXECS= cleanMPI1 cleanMPI2
+all: 
+	one two 
 
 one:
 	mpicxx cleanMPI.cc -o cleanMPI1
