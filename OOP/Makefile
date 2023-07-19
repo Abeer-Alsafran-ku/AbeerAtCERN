@@ -1,7 +1,7 @@
-EXECS= main main2 main3 main4
+EXECS= main main2 main3 main4 main5 main6
 
 all:
-	one; two; three; four; 
+	one; two; three; four; five; six; 
 
 git:
 	git add -A; git commit; git push;
@@ -22,8 +22,12 @@ three:
 four:
 	mpicxx mainoop.cc -o main4
 	mpirun -n 3 main4 -s 10 -f 4 -i 2
-
-
+five:
+	mpicxx mainoop.cc -o main5
+	mpirun -n 3 main5 -s 10 -f 5 -i 2
+six:
+	mpicxx mainoop.cc -o main6
+	mpirun -n 3 main6 -s 10 -f 6 -i 2
 
 clean:
 	rm ${EXECS}

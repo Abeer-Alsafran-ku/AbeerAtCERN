@@ -18,7 +18,7 @@
 
 //Implement MPI_sendrecv
 
-const int MPI_METHODS_COUNT = 4; 
+const int MPI_METHODS_COUNT = 6; 
 
 
 
@@ -137,9 +137,9 @@ int main(int argc, char* argv[]) {
     
     std::unique_ptr<MPIBase> MPIObject ;
 
-    if(rank != 0){
+    if(rank != 0){ //worker
         MPIObject = std::make_unique<WorkerProcess>();
-    }else{
+    }else{ //root 
         MPIObject = std::make_unique<RootProcess>(vecSize);
     }
 	
@@ -152,7 +152,7 @@ int main(int argc, char* argv[]) {
         results.push_back(std::make_tuple(commMethods[i], avgSendTime, avgRecvTime));
     }
 
-    if (rank == 0){
+    if (rank == 0){ //root 
         printResults(results, iterations);
     }
 

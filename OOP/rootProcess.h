@@ -1,4 +1,5 @@
 //initializing the libraries needed
+//ROOT//
 
 #include <iostream>
 #include <iomanip>
@@ -23,6 +24,7 @@ public:
         generateRandomData(vectorSize);
     }
 
+    //beginning of blockingSend 
     std::pair<float, float> blockingSend() override {
             // Send input data from root process to worker processes.
         batchSize = v1_.size() / (size_ - 1);  //execluding root
@@ -33,7 +35,8 @@ public:
         curIdx = 0;
         for (int i = 1; i < size_; i++) {
                 int curSize = batchSize + ((extraBatches >= i)? 1 : 0) ; //size of cur Batch
-                MPI_Send(  &v1_[curIdx], curSize, MPI_FLOAT, i, 0, MPI_COMM_WORLD);
+       			  //data       //count   //type //dst rank//tag //comm. 	
+       		MPI_Send(  &v1_[curIdx], curSize, MPI_FLOAT, i, 0, MPI_COMM_WORLD);
                 MPI_Send(  &v2_[curIdx], curSize, MPI_FLOAT, i, 0, MPI_COMM_WORLD);
                 curIdx += curSize;
         }
@@ -49,7 +52,8 @@ public:
         curIdx = 0;
         for (int i = 1; i < size_; i++) {
                 int curSize = batchSize + ((extraBatches >= i)? 1 : 0) ; //size of cur Batch
-                MPI_Recv(&result[curIdx], curSize, MPI_FLOAT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                        //dat            //count  //type //src rank//tag //comm.    //status
+		MPI_Recv(&result[curIdx], curSize, MPI_FLOAT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                 curIdx += curSize;
         }
 
@@ -58,8 +62,11 @@ public:
 
         checkResult(result);
         return std::pair<float, float>(sendDuration, recvDuration);
-    }
-
+    
+    }//end of blockingSend
+    
+   
+    //beginning of nonBlockingSend 
     std::pair<float, float> nonBlockingSend() override {
 
         MPI_Request requestSend[2*(size_ -1)]; //two for each process (one for sending v1 and the other for sending v2)
@@ -99,9 +106,12 @@ public:
 
         checkResult(result);
         return std::pair<float, float>(sendDuration, recvDuration);
+    
     }
+    //end of nonBlockingSend 
 
 
+    // beginning of blockingScatter 
     std::pair<float, float> blockingScatter() override {
         std::vector<int> numDataPerProcess_ (size_, 0);
         std::vector<int> displacementIndices_ (size_, 0);
@@ -170,9 +180,11 @@ public:
         checkResult(result);
 
         return std::pair<float, float>(sendDuration, recvDuration);
-    }
+    
+    }//end of blockingScatter
 
 
+    //beginnig of nonBlockingScatter 
     std::pair<float, float> nonBlockingScatter() override{
         
         std::vector<int> numDataPerProcess_ (size_, 0);
@@ -254,7 +266,104 @@ public:
         checkResult(result);
 
         return std::pair<float, float>(sendDuration, recvDuration);
-    }
+    
+    }//end of nonBlockingScatter 
+     
+    //beginning of blockingSendRecv ROOT
+    std::pair<float, float> blockingSendRecv() override {
+            // Send input data from root process to worker processes.
+        batchSize = v1_.size() / (size_ - 1);  //execluding root
+        extraBatches = v1_.size() % (size_ - 1); //execluding root
+
+	std::cout<<"BEFORE sending from root blocking sendrecv\n";
+        startTime = MPI_Wtime();
+
+	std::vector<float> dummy;
+
+        curIdx = 0;
+        for (int i = 1; i < size_; i++) {
+                int curSize = batchSize + ((extraBatches >= i)? 1 : 0) ; //size of cur Batch
+		
+
+		MPI_Sendrecv( //sending v1
+		/*sending buf*/ &v1_[curIdx],
+		/*send count*/  curSize ,		
+		/*send type*/  	MPI_FLOAT,
+		/*dst rank*/	i,/*worker*/
+		/*send tag*/	0,/*root tag*/	
+		/*recv buf*/	&dummy,	
+		/*recv count*/  1,	
+		/*recv type*/	MPI_FLOAT,	
+		/*src rank*/    0, /*root*/		
+		/*recv tag*/	0, /*worker tag*/	
+		/*Comm.*/	MPI_COMM_WORLD,	
+		/*status*/	MPI_STATUS_IGNORE	
+				
+				);
+	
+		std::cout<<"sending index "<<curIdx<<" of v1\n";
+		MPI_Sendrecv( //sending v2
+		/*sending buf*/ &v2_[curIdx],
+		/*send count*/  curSize ,		
+		/*send type*/  	MPI_FLOAT,
+		/*dst*/		i,/*worker*/
+		/*send tag*/	0,	
+		/*recv buf*/	&dummy,	
+		/*recv count*/	1,	
+		/*recv type*/	MPI_FLOAT,	
+		/*src*/         0,/*root*/		
+		/*recv tag*/	0,	
+		/*Comm.*/	MPI_COMM_WORLD,	
+		/*status*/	MPI_STATUS_IGNORE	
+				
+				);
+		
+
+		curIdx += curSize;
+        }
+
+	
+        endTime = MPI_Wtime();
+
+	std::cout<<"AFTER sending from root blocking sendrecv\n";
+        sendDuration = (endTime - startTime) * 1000;
+
+        result.resize(v1_.size()) ;
+
+        startTime = MPI_Wtime();
+
+        curIdx = 0;
+        for (int i = 1; i < size_; i++) {
+                int curSize = batchSize + ((extraBatches >= i)? 1 : 0) ; //size of cur Batch
+	
+		//receiving the result of adding v1 to v2
+		MPI_Sendrecv( 
+		/*sending buf*/ &dummy,
+		/*send count*/  0 , 		
+		/*send type*/  	MPI_FLOAT,
+		/*dst*/		0, /*root*/    
+		/*send tag*/	0,/*worker tag*/
+		/*recv buf*/	&result[curIdx],	
+		/*recv count*/	curSize,	
+		/*recv type*/	MPI_FLOAT,	
+		/*src*/         i,/*worker*/	
+		/*recv tag*/	0,/*root tag*/
+		/*Comm.*/	MPI_COMM_WORLD,	
+		/*status*/	MPI_STATUS_IGNORE	
+				
+				);
+
+		curIdx += curSize;
+        }
+
+	std::cout<<"After receiving result from root blocking sendrecv\n";
+        endTime = MPI_Wtime();
+        recvDuration = (endTime - startTime)*1000 ;
+
+        checkResult(result);
+        return std::pair<float, float>(sendDuration, recvDuration);
+    
+    }//end of blockingSendRecv
 
 private:
     const int precisionFactor = 4;
