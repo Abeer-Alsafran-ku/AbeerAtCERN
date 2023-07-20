@@ -189,17 +189,14 @@ public:
             v1.resize(messageSize);
             v2.resize(messageSize);
 
-	    std::vector<float> dummy;
-
-	    std::cout<<"Before Receiving in worker  blocking sendrecv\n";
-	   
 	    //receiving v1
 	   MPI_Sendrecv(
-		/*sending buf*/ &dummy,
+		/*sending buf*/ NULL,
 		/*send count*/  0 ,
 		/*send type*/   MPI_FLOAT,
 		/*dst rank*/    0,/*worker*/
 		/*send tag*/    0,/*root tag*/
+		
 		/*recv buf*/    &v1[0],
 		/*recv count*/  messageSize,
 		/*recv type*/   MPI_FLOAT,
@@ -207,36 +204,31 @@ public:
 		/*recv tag*/    0,/*worker tag*/
 		/*Comm.*/       MPI_COMM_WORLD,
 		/*status*/      MPI_STATUS_IGNORE
+		); 
 
-				); 
-
-	    std::cout<<"After Receiving v1 in worker  blocking sendrecv\n";
 	    //receiving v2
 	   MPI_Sendrecv(
-		/*sending buf*/ &dummy,
+		/*sending buf*/ NULL,
 		/*send count*/  0 ,
 		/*send type*/   MPI_FLOAT,
 		/*dst rank*/    0,/*worker*/
-		/*send tag*/    0,/*root tag*/
+		/*send tag*/    1,/*root tag*/
+
 		/*recv buf*/    &v2[0],
 		/*recv count*/  messageSize,
 		/*recv type*/   MPI_FLOAT,
 		/*src rank*/    0, /*root*/
-		/*recv tag*/    0,/*worker tag*/
+		/*recv tag*/    1,/*worker tag*/
 		/*Comm.*/       MPI_COMM_WORLD,
 		/*status*/      MPI_STATUS_IGNORE
 	
 		);
     
-	    std::cout<<"After Receiving v2 in worker  blocking sendrecv\n";
 
             //adding the two vectors and the result is in v1
 	    for(int i = 0; i < v1.size(); i++){
                     v1[i] += v2[i];
             }
-
-	    std::cout<<"After addition  in worker  blocking sendrecv\n";
-            /*MPI_Send(&v1[0], v1.size(), MPI_FLOAT, 0, 0, MPI_COMM_WORLD);*/
 
 	    //sending back the result of the summation
 	    MPI_Sendrecv(
@@ -244,18 +236,19 @@ public:
 		/*send count*/  v1.size() ,
 		/*send type*/   MPI_FLOAT,
 		/*dst*/         0,/*root*/
-		/*send tag*/    0,/*worker tag*/
-		/*recv buf*/    &dummy,
+		/*send tag*/    2,/*worker tag*/
+		
+		/*recv buf*/    NULL,
 		/*recv count*/  0, 
 		/*recv type*/   MPI_FLOAT,
-		/*src*/         rank_,/*worker rank_*/
-		/*recv tag*/    0,/*root tag*/
+		/*src*/         0,/*worker rank_*/
+		/*recv tag*/    2,/*root tag*/
 		/*Comm.*/       MPI_COMM_WORLD,
 		/*status*/      MPI_STATUS_IGNORE
 
 		);
 
-	    std::cout<<"After sending results in worker  blocking sendrecv\n";
+	
     }
    //end of blockingSend
 

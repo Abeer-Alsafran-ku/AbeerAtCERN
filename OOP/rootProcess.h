@@ -275,10 +275,7 @@ public:
         batchSize = v1_.size() / (size_ - 1);  //execluding root
         extraBatches = v1_.size() % (size_ - 1); //execluding root
 
-	std::cout<<"BEFORE sending from root blocking sendrecv\n";
-        startTime = MPI_Wtime();
-
-	std::vector<float> dummy;
+	startTime = MPI_Wtime();
 
         curIdx = 0;
         for (int i = 1; i < size_; i++) {
@@ -291,41 +288,40 @@ public:
 		/*send type*/  	MPI_FLOAT,
 		/*dst rank*/	i,/*worker*/
 		/*send tag*/	0,/*root tag*/	
-		/*recv buf*/	&dummy,	
-		/*recv count*/  1,	
+		
+		/*recv buf*/	NULL,/*not receiving*/	
+		/*recv count*/  0,	
 		/*recv type*/	MPI_FLOAT,	
-		/*src rank*/    0, /*root*/		
+		/*src rank*/    i, /*root*/		
 		/*recv tag*/	0, /*worker tag*/	
 		/*Comm.*/	MPI_COMM_WORLD,	
 		/*status*/	MPI_STATUS_IGNORE	
 				
 				);
 	
-		std::cout<<"sending index "<<curIdx<<" of v1\n";
 		MPI_Sendrecv( //sending v2
 		/*sending buf*/ &v2_[curIdx],
 		/*send count*/  curSize ,		
 		/*send type*/  	MPI_FLOAT,
 		/*dst*/		i,/*worker*/
-		/*send tag*/	0,	
-		/*recv buf*/	&dummy,	
-		/*recv count*/	1,	
+		/*send tag*/	1,
+
+		/*recv buf*/	NULL,	
+		/*recv count*/	0,	
 		/*recv type*/	MPI_FLOAT,	
-		/*src*/         0,/*root*/		
-		/*recv tag*/	0,	
+		/*src*/         i,/*root*/		
+		/*recv tag*/	1,	
 		/*Comm.*/	MPI_COMM_WORLD,	
 		/*status*/	MPI_STATUS_IGNORE	
 				
 				);
 		
-
 		curIdx += curSize;
         }
 
 	
         endTime = MPI_Wtime();
 
-	std::cout<<"AFTER sending from root blocking sendrecv\n";
         sendDuration = (endTime - startTime) * 1000;
 
         result.resize(v1_.size()) ;
@@ -338,16 +334,17 @@ public:
 	
 		//receiving the result of adding v1 to v2
 		MPI_Sendrecv( 
-		/*sending buf*/ &dummy,
+		/*sending buf*/ NULL,
 		/*send count*/  0 , 		
 		/*send type*/  	MPI_FLOAT,
-		/*dst*/		0, /*root*/    
-		/*send tag*/	0,/*worker tag*/
+		/*dst*/		i, /*root*/    
+		/*send tag*/	2,/*worker tag*/
+	
 		/*recv buf*/	&result[curIdx],	
 		/*recv count*/	curSize,	
 		/*recv type*/	MPI_FLOAT,	
 		/*src*/         i,/*worker*/	
-		/*recv tag*/	0,/*root tag*/
+		/*recv tag*/	2,/*root tag*/
 		/*Comm.*/	MPI_COMM_WORLD,	
 		/*status*/	MPI_STATUS_IGNORE	
 				
@@ -356,9 +353,11 @@ public:
 		curIdx += curSize;
         }
 
-	std::cout<<"After receiving result from root blocking sendrecv\n";
+
         endTime = MPI_Wtime();
         recvDuration = (endTime - startTime)*1000 ;
+
+	std::cout<<"\nres = "<<sendDuration<<" "<<recvDuration;
 
         checkResult(result);
         return std::pair<float, float>(sendDuration, recvDuration);

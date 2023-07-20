@@ -134,7 +134,7 @@ int main(int argc, char* argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     auto [vecSize, commMethods, iterations] = parseCommands(argc,argv);
-    
+
     std::unique_ptr<MPIBase> MPIObject ;
 
     if(rank != 0){ //worker
