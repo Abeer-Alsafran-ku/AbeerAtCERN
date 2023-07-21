@@ -27,12 +27,13 @@ public:
     //beginning of blockingSend 
     std::pair<float, float> blockingSend() override {
             // Send input data from root process to worker processes.
-        batchSize = v1_.size() / (size_ - 1);  //execluding root
-        extraBatches = v1_.size() % (size_ - 1); //execluding root
+        
+	int batchSize = v1_.size() / (size_ - 1); //the size for each process execluding root
+        int extraBatches = v1_.size() % (size_ - 1); //the size for the batches thatll get the extra (%) execluding root
 
-        startTime = MPI_Wtime();
+	float startTime = MPI_Wtime();
 
-        curIdx = 0;
+        int curIdx = 0;
         for (int i = 1; i < size_; i++) {
                 int curSize = batchSize + ((extraBatches >= i)? 1 : 0) ; //size of cur Batch
        			  //data       //count   //type //dst rank//tag //comm. 	
@@ -41,7 +42,7 @@ public:
                 curIdx += curSize;
         }
 
-        endTime = MPI_Wtime();
+        float endTime = MPI_Wtime();
 
         sendDuration = (endTime - startTime) * 1000;
 
@@ -72,12 +73,12 @@ public:
         MPI_Request requestSend[2*(size_ -1)]; //two for each process (one for sending v1 and the other for sending v2)
         MPI_Request requestRecv;
 
-        batchSize = v1_.size() / (size_ - 1);  //execluding root
-        extraBatches = v1_.size() % (size_ - 1); //execluding root
+	int batchSize = v1_.size() / (size_ - 1); //the size for each process execluding root
+        int extraBatches = v1_.size() % (size_ - 1); //the size for the batches thatll get the extra (%) execluding root
 
-        startTime = MPI_Wtime();
+        float startTime = MPI_Wtime();
 
-        curIdx = 0;
+        int curIdx = 0;
 
         for (int i = 1; i < size_; i++) {
                 int curSize = batchSize + ((extraBatches >= i)? 1 : 0) ; //size of cur Batch
@@ -86,7 +87,7 @@ public:
                 curIdx += curSize;
         }
 	MPI_Waitall( 2*(size_ - 1), requestSend, MPI_STATUS_IGNORE);
-        endTime = MPI_Wtime();
+        float endTime = MPI_Wtime();
         sendDuration = (endTime - startTime)*1000;
 
         result.resize(v1_.size()) ;
@@ -115,11 +116,11 @@ public:
     std::pair<float, float> blockingScatter() override {
         std::vector<int> numDataPerProcess_ (size_, 0);
         std::vector<int> displacementIndices_ (size_, 0);
-        
-        batchSize = v1_.size() / (size_ - 1);  //execluding root
-        extraBatches = v1_.size() % (size_ - 1); //execluding root                   
 
-        curIdx = 0;
+	int batchSize = v1_.size() / (size_ - 1); //the size for each process execluding root
+        int extraBatches = v1_.size() % (size_ - 1); //the size for the batches thatll get the extra (%) execluding root
+
+        int curIdx = 0;
         for(int i = 1; i < size_; i++){
             numDataPerProcess_[i] = batchSize + ((extraBatches >= i)? 1 : 0) ;
             displacementIndices_[i] = curIdx;
@@ -131,7 +132,7 @@ public:
             MPI_Send(&sizeToSend, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
         }
 
-        startTime = MPI_Wtime();
+        float startTime = MPI_Wtime();
         // Start scattering.
         MPI_Scatterv(
             &v1_[0],
@@ -156,7 +157,7 @@ public:
             MPI_COMM_WORLD
         );
 
-        endTime = MPI_Wtime();
+        float endTime = MPI_Wtime();
         result.resize(v1_.size()) ;
 
         sendDuration = (endTime - startTime) * 1000;
@@ -190,13 +191,13 @@ public:
         std::vector<int> numDataPerProcess_ (size_, 0);
         std::vector<int> displacementIndices_ (size_, 0);
 
-        batchSize = v1_.size() / (size_ - 1);  //execluding root
-        extraBatches = v1_.size() % (size_ - 1); //execluding root
+	int batchSize = v1_.size() / (size_ - 1); //the size for each process execluding root
+        int extraBatches = v1_.size() % (size_ - 1); //the size for the batches thatll get the extra (%) execluding root
 
         MPI_Request requestScatter[2];
         MPI_Request requestGather;
 
-        curIdx = 0;
+        int curIdx = 0;
         for(int i = 1; i < size_; i++){
             numDataPerProcess_[i] = batchSize + ((extraBatches >= i)? 1 : 0) ;
             displacementIndices_[i] = curIdx;
@@ -210,7 +211,7 @@ public:
 
         
 
-        startTime = MPI_Wtime();  // Get the start time before scattering.
+        float startTime = MPI_Wtime();  // Get the start time before scattering.
 
         MPI_Iscatterv(
             &v1_[0],
@@ -238,7 +239,7 @@ public:
             &requestScatter[1]
         );
 
-        endTime = MPI_Wtime();
+        float endTime = MPI_Wtime();
         result.resize(v1_.size()) ;
 
         sendDuration = (endTime - startTime) * 1000;
@@ -272,12 +273,12 @@ public:
     //beginning of blockingSendRecv ROOT
     std::pair<float, float> blockingSendRecv() override {
             // Send input data from root process to worker processes.
-        batchSize = v1_.size() / (size_ - 1);  //execluding root
-        extraBatches = v1_.size() % (size_ - 1); //execluding root
+        int batchSize = v1_.size() / (size_ - 1); //the size for each process execluding root
+        int extraBatches = v1_.size() % (size_ - 1); //the size for the batches thatll get the extra (%) execluding root
 
-	startTime = MPI_Wtime();
+	float startTime = MPI_Wtime();
 
-        curIdx = 0;
+        int curIdx = 0;
         for (int i = 1; i < size_; i++) {
                 int curSize = batchSize + ((extraBatches >= i)? 1 : 0) ; //size of cur Batch
 		
@@ -320,7 +321,7 @@ public:
         }
 
 	
-        endTime = MPI_Wtime();
+        float endTime = MPI_Wtime();
 
         sendDuration = (endTime - startTime) * 1000;
 
@@ -367,13 +368,8 @@ private:
     std::vector<float> v1_;
     std::vector<float> v2_;
     std::vector<float> result ;
-    int batchSize;      //the size for each process
-    int extraBatches;   //the size for the batches thatll get the extra (%)
-    int curIdx;         // used for iterating over
     int size_;          //num of process
     int rank_;          //rank of process - HERE its always zero
-    float endTime;  
-    float startTime;
     float sendDuration;
     float recvDuration;
 

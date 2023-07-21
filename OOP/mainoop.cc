@@ -1,5 +1,6 @@
 //initializing the libraries needed
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <cstdlib>
 #include <string>
@@ -83,7 +84,7 @@ std::tuple<int, std::vector<int>, int> parseCommands(int argc, char* argv[]){
 
 void printResults(const std::vector<std::tuple<int, float, float>> executionTimes, int iterations) {
 
-
+    /*Printing to the output screen*/	
     const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV"," ", "BLOCKING SENDRECV"};
     const auto COL1 = 25, COL2 = 15, COL3 = 15, COL4 = 11;
     std::string ROW    = "================================================================================";
@@ -118,6 +119,57 @@ void printResults(const std::vector<std::tuple<int, float, float>> executionTime
     }
 
     std::cout << "\n\t"<<ROW<<"\n\n";
+
+
+
+    /*Printing to the file*/
+
+    std::fstream fd;
+    fd.open("result_file.txt", std::fstream::in | std::fstream::out | std::fstream::app);
+    if( !fd ){ //file cannot be opened 
+	std::cout<<"File Cannot be opened1\n";
+	exit(0);
+    }
+    else{ //file is opened 
+	
+	    //write to the file the results
+		
+	     fd << "\n\n\t"<<ROW;
+    	     fd << "\n\t|| "<<std::left
+              <<std::setw(COL1)<<"Communication Method"<<"|| "
+              <<std::setw(COL2)<<"Scatter/Send"<<"|| "
+              <<std::setw(COL3)<<"Gather/Receive"<<"|| "
+              <<std::setw(COL4)<<"Iterations"<<"||"
+              << "\n\t"<<ROW;
+
+
+
+    // Print the execution times and related information
+    for (int i = 0; i < executionTimes.size(); ++i) {
+        if(i > 0) fd << "\n\t"<<DASHES;
+
+        auto [commMethod, avgSendTime, avgRecvTime] = executionTimes[i];
+
+        fd << "\n\t|| " <<std::left
+                  << std::setw(COL1) << COMM_METHOD_NAMES[commMethod-1] << "|| "
+                  << std::setw(COL2) << avgSendTime << "|| "
+                  << std::setw(COL3) << avgRecvTime << "|| "
+                  << std::setw(COL4) << iterations<< "||";
+
+    }
+
+    fd << "\n\t"<<ROW<<"\n\n";
+
+
+
+
+	    fd.close();
+
+
+    }  
+
+
+
 }
 
 
