@@ -357,8 +357,6 @@ public:
         endTime = MPI_Wtime();
         recvDuration = (endTime - startTime)*1000 ;
 
-	std::cout<<"\nres = "<<sendDuration<<" "<<recvDuration;
-
         checkResult(result);
         return std::pair<float, float>(sendDuration, recvDuration);
     
