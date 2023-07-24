@@ -42,9 +42,6 @@ public:
                 curIdx += curSize;
         }
 
-	//Barrier to make sure all group members have entered the barrier 
-	//MPI_Barrier(MPI_COMM_WORLD);
-
         float endTime = MPI_Wtime();
 
         sendDuration = (endTime - startTime) * 1000;
@@ -74,7 +71,7 @@ public:
     std::pair<float, float> nonBlockingSend() override {
 
         MPI_Request requestSend[2*(size_ -1)]; //two for each process (one for sending v1 and the other for sending v2)
-        MPI_Request requestRecv;
+        MPI_Request requestRecv[size_ -1];
 
 	int batchSize = v1_.size() / (size_ - 1); //the size for each process execluding root
         int extraBatches = v1_.size() % (size_ - 1); //the size for the batches thatll get the extra (%) execluding root
@@ -89,8 +86,9 @@ public:
                 MPI_Issend(  &v2_[curIdx], curSize, MPI_FLOAT, i, 0, MPI_COMM_WORLD, &requestSend[(i-1)*2 + 1]);
                 curIdx += curSize;
         }
-	//MPI_Waitall( 2*(size_ - 1), requestSend, MPI_STATUS_IGNORE);
-        float endTime = MPI_Wtime();
+	MPI_Waitall( 2*(size_ - 1), requestSend, MPI_STATUS_IGNORE);
+        
+	float endTime = MPI_Wtime();
         sendDuration = (endTime - startTime)*1000;
 
         result.resize(v1_.size()) ;
@@ -100,10 +98,15 @@ public:
         curIdx = 0;
         for (int i = 1; i < size_; i++) {
                 int curSize = batchSize + ((extraBatches >= i)? 1 : 0) ; //size of cur Batch
-                MPI_Irecv(&result[curIdx], curSize, MPI_FLOAT, i, 0, MPI_COMM_WORLD, &requestRecv);
-                MPI_Wait(&requestRecv, MPI_STATUS_IGNORE);
+                MPI_Irecv(&result[curIdx], curSize, MPI_FLOAT, i, 0, MPI_COMM_WORLD, &requestRecv[i-1]);
                 curIdx += curSize;
         }
+
+	//wait for all receive processes 
+	for(int i=1 ; i<size_ ;i++)
+	{
+		MPI_Wait(&requestRecv[i-1],MPI_STATUS_IGNORE);
+	}
 
         endTime = MPI_Wtime();
         recvDuration = (endTime - startTime)*1000 ;
@@ -212,8 +215,6 @@ public:
             MPI_Send(&sizeToSend, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
         }
 
-        
-
         float startTime = MPI_Wtime();  // Get the start time before scattering.
 
         MPI_Iscatterv(
@@ -241,6 +242,7 @@ public:
             MPI_COMM_WORLD,
             &requestScatter[1]
         );
+
 
         float endTime = MPI_Wtime();
         result.resize(v1_.size()) ;

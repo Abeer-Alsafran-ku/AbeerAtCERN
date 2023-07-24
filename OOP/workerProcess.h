@@ -24,9 +24,9 @@ public:
 
     }
 
-    //beginning of blockingSend
-    std::pair<float, float> blockingSend() override {
-            //ROOT RANK IS ALWAYS ZERO 
+
+        std::pair<float, float> blockingSend() override {
+            //ROOT RANK IS ALWAYS ZERO
 
             MPI_Status status;
             MPI_Probe(0, 0, MPI_COMM_WORLD, &status);
@@ -35,20 +35,16 @@ public:
             // Resize vectors
             v1.resize(messageSize);
             v2.resize(messageSize);
-	    //receiving vectors from root process
-		   //data  //count     //typ//src rank//tag //comm.    //status            
+
             MPI_Recv(&v1[0], messageSize, MPI_FLOAT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             MPI_Recv(&v2[0], messageSize, MPI_FLOAT, 0 ,0 , MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-	    //summation of v1 and v2
             for(int i = 0; i < v1.size(); i++){
                     v1[i] += v2[i];
             }
 
-	    //sending to the root the result
             MPI_Send(&v1[0], v1.size(), MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
     }
-    //end of blockingSend
 
     //beginning of nonBlockingSend
     std::pair<float, float> nonBlockingSend() override {
