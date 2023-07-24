@@ -59,6 +59,9 @@ Or:
 * make two <- for running the blockingScatter()
 * make three <- for running the nonBlockingSend()
 * make four <- for running the blockingSend()
-
-
-Please adapt the implementation according to your needs for optimal utility.
+* make six <- for running the blockingSendrecv()
+  
+## Notes:
+* Please adapt the implementation according to your needs for optimal utility.
+* original_result_csv file is the original code before adding barrier and MPI_Wait.
+ 
