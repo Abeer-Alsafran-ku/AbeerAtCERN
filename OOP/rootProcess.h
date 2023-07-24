@@ -42,6 +42,9 @@ public:
                 curIdx += curSize;
         }
 
+	//Barrier to make sure all group members have entered the barrier 
+	//MPI_Barrier(MPI_COMM_WORLD);
+
         float endTime = MPI_Wtime();
 
         sendDuration = (endTime - startTime) * 1000;
@@ -86,7 +89,7 @@ public:
                 MPI_Issend(  &v2_[curIdx], curSize, MPI_FLOAT, i, 0, MPI_COMM_WORLD, &requestSend[(i-1)*2 + 1]);
                 curIdx += curSize;
         }
-	MPI_Waitall( 2*(size_ - 1), requestSend, MPI_STATUS_IGNORE);
+	//MPI_Waitall( 2*(size_ - 1), requestSend, MPI_STATUS_IGNORE);
         float endTime = MPI_Wtime();
         sendDuration = (endTime - startTime)*1000;
 
