@@ -1,4 +1,4 @@
-### Majed @ CERN
+### Majed and Abeer @ CERN
 
 # MPI Function Timing Tool 
 
