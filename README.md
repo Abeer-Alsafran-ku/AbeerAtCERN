@@ -64,4 +64,5 @@ Or:
 ## Notes:
 * Please adapt the implementation according to your needs for optimal utility.
 * original_result_csv file is the original code before adding barrier and MPI_Wait.
+* secondry_result_csv file is the code that uses barrier and MPI_Wait.
  
