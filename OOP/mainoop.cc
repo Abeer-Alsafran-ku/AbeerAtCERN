@@ -19,7 +19,7 @@
 
 //Implement MPI_sendrecv
 
-const int MPI_METHODS_COUNT = 6; 
+const int MPI_METHODS_COUNT = 7; 
 
 
 
@@ -86,7 +86,7 @@ std::tuple<int, std::vector<int>, int> parseCommands(int argc, char* argv[]){
 // printing to a csv file 
 void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, int iterations) {
 	/*Printing to the file*/
-	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV"," ", "BLOCKING SENDRECV"};
+	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV"," ", "BLOCKING SENDRECV","ONE SIDED"};
 	std::fstream fd;
 	fd.open("secondry_result_csv.csv", std::fstream::in | std::fstream::out | std::fstream::app);
 	if( !fd ){ //file cannot be opened 
@@ -137,7 +137,7 @@ void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, i
 void printFile(const std::vector<std::tuple<int, float, float>> executionTimes, int iterations) {
 	/*Printing to the file*/
 	/*Printing to the output screen*/	
-	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV"," ", "BLOCKING SENDRECV"};
+	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV"," ", "BLOCKING SENDRECV","ONE SIDED"};
 	const auto COL1 = 25, COL2 = 15, COL3 = 15, COL4 = 11;
 	std::string ROW    = "================================================================================";
 	std::string DASHES = "--------------------------------------------------------------------------------";
@@ -189,7 +189,7 @@ void printFile(const std::vector<std::tuple<int, float, float>> executionTimes, 
 void printResults(const std::vector<std::tuple<int, float, float>> executionTimes, int iterations) {
 
 	/*Printing to the output screen*/	
-	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV"," ", "BLOCKING SENDRECV"};
+	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV"," ", "BLOCKING SENDRECV","ONE SIDED"};
 	const auto COL1 = 25, COL2 = 15, COL3 = 15, COL4 = 11;
 	std::string ROW    = "================================================================================";
 	std::string DASHES = "--------------------------------------------------------------------------------";

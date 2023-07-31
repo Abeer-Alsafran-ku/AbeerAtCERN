@@ -1,6 +1,7 @@
 #ifndef PROCESSINTERFACE_H
 #define PROCESSINTERFACE_H
 
+
 class MPIBase {
 public:
     virtual std::pair<float, float> blockingSend() = 0;
@@ -8,6 +9,7 @@ public:
     virtual std::pair<float, float> blockingScatter() = 0;
     virtual std::pair<float, float> nonBlockingScatter() = 0;
     virtual std::pair<float, float> blockingSendRecv() = 0;
+    virtual std::pair<float, float> oneSidedComm() = 0;
 
     std::pair<float, float> calculateAverageTime(int funcNum, int iterations) {
         std::pair<float, float> averageTime;
@@ -32,6 +34,9 @@ public:
                     break;
 		case 6:
 		    timeDuration = blockingSendRecv();
+		    break;
+		case 7:
+		    timeDuration = oneSidedComm();
 		    break;
                 default:
                     std::cerr << "\n\n\tError: Invalid function number!\n";

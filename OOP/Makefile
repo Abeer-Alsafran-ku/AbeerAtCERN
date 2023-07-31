@@ -1,4 +1,4 @@
-EXECS= main main2 main3 main4 main5 main6
+EXECS= main main2 main3 main4 main5 main6 main7
 
 all:
 	one; two; three; four; five; six; 
@@ -28,6 +28,10 @@ five:
 six:
 	mpicxx mainoop.cc -o main6
 	mpirun -n 3 main6 -s 10 -f 6 -i 2 
+seven:
+	mpicxx mainoop.cc -o main7
+	mpirun -n 2 main7 -s 10 -f 7 -i 1 
+
 
 clean:
 	rm ${EXECS}

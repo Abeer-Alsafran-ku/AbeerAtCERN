@@ -248,6 +248,88 @@ public:
     }
    //end of blockingSend
 
+
+	//beggining of one sided communincation 
+        std::pair<float, float> oneSidedComm() override {
+            //ROOT RANK IS ALWAYS ZERO
+	    printf("in worker\n");
+	    MPI_Win win;
+            MPI_Status status;
+            MPI_Probe(0, 0, MPI_COMM_WORLD, &status);
+            MPI_Get_count(&status, MPI_FLOAT, &messageSize);
+	    int vec_size;
+
+	    //receiving the size of vectors  
+	    MPI_Recv(&vec_size,messageSize ,MPI_INT,0,0,MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	    // Resize vectors
+	    v1.resize(vec_size);
+            v2.resize(vec_size);
+	    float *win_buff = (float *)malloc (vec_size * sizeof(float));
+	    
+	    //creating window
+	    MPI_Win_create(&win_buff,vec_size*sizeof(float), sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win);
+	    //fence 1
+	    MPI_Win_fence(0,win);
+
+	    //receiving the vectors using mpi_Get()
+
+	    //getting v1 
+	    MPI_Get(&win_buff,vec_size, MPI_FLOAT, 0,0,vec_size,MPI_FLOAT,win);
+	
+	    //fence 2 
+	    MPI_Win_fence(0,win);
+   
+	    printf("win buff in worker \n");
+	    for(int i=0;i<vec_size ;i++){
+		   printf("%d ",win_buff[i]);
+	    }
+	    printf("\n"); 
+	    printf("arr 1 in worker %d %d %d \n",v1[0],v1[1],v1[2]);
+	    for (int i=0;i<vec_size ;i++){
+		    //copying from window to v1 
+		    v1[i] = win_buff[i];
+		    printf("%d \n ",win_buff[i]);
+	    }
+	    
+	    printf("after getting 1 in worker \n");
+	    //getting v2 
+	    //MPI_Get(&win_buff,vec_size, MPI_FLOAT, 0,0,vec_size,MPI_FLOAT,win);
+
+	    //fence 3 
+	    //MPI_Win_fence(0,win);
+
+	    printf("arr 2 in worker %d %d %d\n",v2[0],v2[1],v2[2]);
+	    for (int i=0;i<vec_size ;i++){
+		    //copying from window to v2 
+		    v2[i] = win_buff[i];
+		    printf("%d \n ",win_buff[i]);
+	    }
+
+
+	    printf("after getting 2 in worker \n");
+	    //calculating the summation of 2 vectors
+	    for(int i=0;i<vec_size;i++){
+		    v1[i] = v1[i] +  v2[i];
+	    }
+
+	    printf("result in worker %d \n",v1[0]);
+	    for (int i=0;i<vec_size;i++){
+		    printf("%d ",v1[i]);
+		    win_buff[i]=v1[i];
+	    }
+	    printf("\n");
+
+	    //sending back the results
+	   // MPI_Put(&win_buff,v1.size(),MPI_FLOAT, 0,0,v1.size(),MPI_FLOAT,win);
+	    MPI_Put(&v1,v1.size(),MPI_FLOAT, 1,0,v1.size(),MPI_FLOAT,win);
+
+	    MPI_Win_fence(0,win);
+
+	    MPI_Win_free(&win);
+	    free(win_buff);
+	}
+
+
 private:
     int size_;
     int rank_;
