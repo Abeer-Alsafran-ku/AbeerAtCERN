@@ -385,54 +385,52 @@ class RootProcess: public MPIBase {
 			MPI_Send(&vec_size,1,MPI_INT,1,0,MPI_COMM_WORLD);
 
 			//creating a window
-			MPI_Win_create(&win_buff,v1_.size()*sizeof(float),sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win);
+			MPI_Win_create(&win_buff[0],v1_.size()*sizeof(float),sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win);
 			//fence 1
 			MPI_Win_fence(0,win);
 
 			float startTime = MPI_Wtime();
 			int curIdx = 0;
 			//sending v1 
-			printf("putting 1 ... in root \n");	
-			printf("win buff in root \n");	
+			printf("win buff1 in root \n");	
 			for(int i=0;i<vec_size ;i++){
 				win_buff[i] = v1_[i];
 				printf("%d ",win_buff[i]);
 			}
 			printf("\n");
-
+			//fence 2
+			MPI_Win_fence(0,win);
+			//put 1 
 			MPI_Put(&win_buff,vec_size,MPI_FLOAT, 1,0,vec_size, MPI_FLOAT,win);
+			//fence 3
 			MPI_Win_fence(0,win);
 			
 			//sending v2
-				
-			printf("after putting 1 ... in root \n");	
-			printf("putting v2 ... in root \n");	
 			for(int i=0;i<vec_size ;i++)
+			//copying v2 to win buff
 				win_buff[i] = v2_[i];
 
+			printf("win buff2 in root \n");	
 			for(int i=0;i<vec_size ;i++)
 				printf("%d ",v2_[i]);
 			printf("\n");
-
-//			MPI_Put(&win_buff,vec_size,MPI_FLOAT, 1,0,vec_size, MPI_FLOAT,win);
-//			MPI_Win_fence(0,win);
-			
-			printf("after putting 2 ... in root \n");	
+			//fence 4
+			MPI_Win_fence(0,win);
+			//put 2
+			MPI_Put(&win_buff,vec_size,MPI_FLOAT, 1,0,vec_size, MPI_FLOAT,win);
+			//fence 5
+			MPI_Win_fence(0,win);
 			
 			float endTime = MPI_Wtime();
 			sendDuration = (endTime - startTime) * 1000;
 			result.resize(v1_.size()) ;
 			startTime = MPI_Wtime();
+			
 			//getting the result from worker	
-			//base  //count    //typr     //rank//disp //count //type //win
-
-			MPI_Get(&win_buff,vec_size,MPI_FLOAT,0,0,vec_size,MPI_FLOAT,win);
-
+			//fence 6
 			MPI_Win_fence(0,win);
 			endTime = MPI_Wtime();
-			
 			recvDuration = (endTime - startTime)*1000 ;
-			
 			printf("res in root \n");
 			for (int i =0;i<vec_size;i++)
 			{
@@ -441,9 +439,8 @@ class RootProcess: public MPIBase {
 			
 				printf("%d ",win_buff[i]);
 			}
-
 		
-			MPI_Win_free(&win);	
+			MPI_Win_free(&win);
 			free(win_buff);
 			checkResult(result);
 			return std::pair<float, float>(sendDuration, recvDuration);
