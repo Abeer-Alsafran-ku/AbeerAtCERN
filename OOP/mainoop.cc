@@ -88,7 +88,7 @@ void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, i
 	/*Printing to the file*/
 	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV"," ", "BLOCKING SENDRECV","ONE SIDED"};
 	std::fstream fd;
-	fd.open("secondry_result_csv.csv", std::fstream::in | std::fstream::out | std::fstream::app);
+	fd.open("secondry_result.csv", std::fstream::in | std::fstream::out | std::fstream::app);
 	if( !fd ){ //file cannot be opened 
 		std::cout<<"File Cannot be opened1\n";
 		exit(0);
@@ -260,7 +260,7 @@ int main(int argc, char* argv[]) {
 
 	if (rank == 0){ //root 
 		printResults(results, iterations); //print to std output
-		printCSV(results, iterations); //print to a csv file 
+		//printCSV(results, iterations); //print to a csv file 
 	}
 
 	MPI_Finalize(); 
