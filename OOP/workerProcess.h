@@ -251,7 +251,6 @@ public:
 	//beggining of one sided communincation 
         std::pair<float, float> oneSidedComm() override {
             //ROOT RANK IS ALWAYS ZERO
-	    printf("in worker\n");
 	    MPI_Win win;
 	    int vec_size;
 	    //receiving the size of vectors  
@@ -260,69 +259,47 @@ public:
 	    // Resize vectors
 	    v1.resize(vec_size);
             v2.resize(vec_size);
-	    float *win_buff1 = (float *)malloc (vec_size * sizeof(float));
-	    float *win_buff2 = (float *)malloc (vec_size * sizeof(float));
+	    
+	    //widow buffer
+	    float *win_buff = (float *)malloc (vec_size * sizeof(float));
 	    
 	    //creating window
-	    MPI_Win_create(&v1[0],vec_size*sizeof(float), sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win);
+	    MPI_Win_create(&win_buff[0],vec_size*sizeof(float), sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win);
+
 	    //fence 1
 	    MPI_Win_fence(0,win);
-
-	    //getting v1 
 	    //fence 2
-	    MPI_Win_fence(0,win);
-	   
-	    printf("vec 1 in worker \n"); 
-	    for(int i=0;i<vec_size ;i++){
-		   printf("%d ",v1[i]);
-	    }
-	    printf("\n"); 
+	    MPI_Win_fence(0,win); //put 1 from root
+
+	    //getting v1
 	    for (int i=0;i<vec_size ;i++){
-		    //copying from window to v1 
-		     win_buff1[i]= v1[i];
-	    }
+                    //copying from window to v1
+                     v1[i] = win_buff[i];
+            }
+
+	    //getting v2
+	    //fence 3 
+	    MPI_Win_fence(0,win); //put 2 from root
 	    
-	    //fence 3
-	    MPI_Win_fence(0,win);
-	    //getting v2 
-	    //fence 4 
-	    MPI_Win_fence(0,win);
-
-	    printf("vec 2 in worker \n"); 
-	    for(int i=0;i<vec_size ;i++){
-		   printf("%d ",v1[i]);
-	    }
-	    printf("\n"); 
-	    for (int i=0;i<vec_size ;i++){
-		    //copying from window to v2 
-		     win_buff2[i] = v1[i];
-	    }
-
-	    //fence 5
-	    MPI_Win_fence(0,win);
+ 	    for (int i=0;i<vec_size ;i++){
+                    //copying from window to v1
+                     v2[i] = win_buff[i];
+            }
 
 	    //calculating the summation of 2 vectors
 	    for(int i=0;i<10;i++){
-		    v1[i] = win_buff1[i] +  win_buff2[i];
+		    v1[i] += v2[i];
 	    }
-
-	    printf("result in worker \n");
-	    for (int i=0;i<vec_size;i++){
-		    printf("%d ",v1[i]);
-	    }
-	    printf("\n");
 
 	    //sending back the results to proc 0 window
-	    MPI_Put(&v1,v1.size(),MPI_FLOAT, 0,0,v1.size(),MPI_FLOAT,win);
-	    //fence 6
+	    MPI_Put(&v1[0],v1.size(),MPI_FLOAT, 0,0,v1.size(),MPI_FLOAT,win);
+	    
+	    //fence 4 
 	    MPI_Win_fence(0,win);
 
 	    MPI_Win_free(&win);
-	    free(win_buff1);
-	    free(win_buff2);
+	    free(win_buff);
 	}
-
-
 
 private:
     int size_;

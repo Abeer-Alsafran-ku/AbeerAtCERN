@@ -42,6 +42,7 @@ class RootProcess: public MPIBase {
 				curIdx += curSize;
 			}
 
+
 			float endTime = MPI_Wtime();
 
 			sendDuration = (endTime - startTime) * 1000;
@@ -371,83 +372,64 @@ class RootProcess: public MPIBase {
 		//beginning of oneSidedComm 
 		std::pair<float, float> oneSidedComm() override {
 			// Send input data from root process to worker processes.
-
-			printf("in root\n");
-			int batchSize = v1_.size() / (size_ - 1); //the size for each process execluding root
-			int extraBatches = v1_.size() % (size_ - 1); //the size for the batches thatll get the extra (%) execluding root
-
-			MPI_Win win;
-			float *win_buff = (float *)malloc(v1_.size()*sizeof(float));
-
 			//sending vec size
 			int vec_size = v1_.size();
-
 			MPI_Send(&vec_size,1,MPI_INT,1,0,MPI_COMM_WORLD);
 
+			float *win_buff = (float *)malloc(v1_.size()*sizeof(float));
 			//creating a window
+			MPI_Win win;
 			MPI_Win_create(&win_buff[0],v1_.size()*sizeof(float),sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win);
 			//fence 1
 			MPI_Win_fence(0,win);
-
-			float startTime = MPI_Wtime();
-			int curIdx = 0;
-			//sending v1 
-			printf("win buff1 in root \n");	
-			for(int i=0;i<vec_size ;i++){
-				win_buff[i] = v1_[i];
-				printf("%d ",win_buff[i]);
-			}
-			printf("\n");
-			//fence 2
-			MPI_Win_fence(0,win);
-			//put 1 
-			MPI_Put(&win_buff,vec_size,MPI_FLOAT, 1,0,vec_size, MPI_FLOAT,win);
-			//fence 3
-			MPI_Win_fence(0,win);
 			
-			//sending v2
-			for(int i=0;i<vec_size ;i++)
-			//copying v2 to win buff
-				win_buff[i] = v2_[i];
+			//starting the time of sending
+			float startTime = MPI_Wtime();
+			///////////////////
 
-			printf("win buff2 in root \n");	
-			for(int i=0;i<vec_size ;i++)
-				printf("%d ",v2_[i]);
-			printf("\n");
-			//fence 4
+			//put 1
+			MPI_Put(&v1_[0],vec_size,MPI_FLOAT, 1,0,vec_size, MPI_FLOAT,win);
+			//fence 2 
 			MPI_Win_fence(0,win);
 			//put 2
-			MPI_Put(&win_buff,vec_size,MPI_FLOAT, 1,0,vec_size, MPI_FLOAT,win);
-			//fence 5
+			MPI_Put(&v2_[0],vec_size,MPI_FLOAT, 1,0,vec_size, MPI_FLOAT,win);
+			//fence 3
 			MPI_Win_fence(0,win);
-			
+
+			//ending the time 
 			float endTime = MPI_Wtime();
 			sendDuration = (endTime - startTime) * 1000;
+			////////////////
+
 			result.resize(v1_.size()) ;
-			startTime = MPI_Wtime();
 			
+			//starting the time for receiving 
+			startTime = MPI_Wtime();
+			////////////////////////
+
 			//getting the result from worker	
-			//fence 6
+			//fence 4
 			MPI_Win_fence(0,win);
+
+			//ending the time of receiving 
 			endTime = MPI_Wtime();
 			recvDuration = (endTime - startTime)*1000 ;
-			printf("res in root \n");
+			/////////////////////
+
 			for (int i =0;i<vec_size;i++)
-			{
-				//copying from window to result buff
+			{	//copying from window to result buff
 				result[i] = win_buff[i];
-			
-				printf("%d ",win_buff[i]);
 			}
-		
-			MPI_Win_free(&win);
-			free(win_buff);
-			checkResult(result);
+
+			checkResult(result); //check result
+			MPI_Win_free(&win); //freeing the window 
+			free(win_buff); //freeing the buff
+
 			return std::pair<float, float>(sendDuration, recvDuration);
 
 		}//end of oneSidedComm
 
-	private:
+			private:
 		const int precisionFactor = 4;
 		std::vector<float> v1_;
 		std::vector<float> v2_;
@@ -458,6 +440,7 @@ class RootProcess: public MPIBase {
 		float recvDuration;
 
 		void generateRandomData(int vectorSize) {
+
 			std::random_device rand;  // Random device used to seed the random engine.
 			std::default_random_engine gener(rand());  // Default random engine.
 			std::uniform_real_distribution<> dis(0., 1.);  // Uniform distribution from 0 to 1.
@@ -517,4 +500,4 @@ class RootProcess: public MPIBase {
 			std::cout << "Total Error = " << totalError << std::endl;
 
 		}
-};
+		};
