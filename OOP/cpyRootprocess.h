@@ -382,7 +382,8 @@ class RootProcess: public MPIBase {
 			MPI_Win_create(&v1_[0],v1_.size()*sizeof(float),sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win1);
 			MPI_Win_create(&v2_[0],v2_.size()*sizeof(float),sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win2);
 			//fence 1
-			MPI_Win_fence(0,win);
+			MPI_Win_fence(0,win1);
+			MPI_Win_fence(0,win2);
 			
 			//starting the time of sending
 			float startTime = MPI_Wtime();
@@ -391,11 +392,11 @@ class RootProcess: public MPIBase {
 			//put 1
 			MPI_Put(&v1_[0],vec_size,MPI_FLOAT, 1,0,vec_size, MPI_FLOAT,win1);
 			//fence 2 
-			MPI_Win_fence(0,win);
+			MPI_Win_fence(0,win1);
 			//put 2
 			MPI_Put(&v2_[0],vec_size,MPI_FLOAT, 1,0,vec_size, MPI_FLOAT,win2);
 			//fence 3
-			MPI_Win_fence(0,win);
+			MPI_Win_fence(0,win2);
 
 			//ending the time 
 			float endTime = MPI_Wtime();
@@ -410,7 +411,7 @@ class RootProcess: public MPIBase {
 
 			//getting the result from worker	
 			//fence 4
-			MPI_Win_fence(0,win);
+			MPI_Win_fence(0,win1);
 
 			//ending the time of receiving 
 			endTime = MPI_Wtime();
@@ -419,11 +420,12 @@ class RootProcess: public MPIBase {
 
 			for (int i =0;i<vec_size;i++)
 			{	//copying from window to result buff
-				result[i] = win_buff[i];
+				result[i] = v1[i];
 			}
 
 			checkResult(result); //check result
-			MPI_Win_free(&win); //freeing the window 
+			MPI_Win_free(&win1); //freeing the window 
+			MPI_Win_free(&win2); //freeing the window 
 			free(win_buff); //freeing the buff
 
 			return std::pair<float, float>(sendDuration, recvDuration);
