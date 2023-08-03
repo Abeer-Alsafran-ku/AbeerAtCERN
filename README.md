@@ -60,6 +60,7 @@ Or:
 * make three <- for running the nonBlockingSend()
 * make four <- for running the blockingSend()
 * make six <- for running the blockingSendrecv()
+* * make seven <- for running the oneSidedComm()
   
 ## Notes:
 * Please adapt the implementation according to your needs for optimal utility.
