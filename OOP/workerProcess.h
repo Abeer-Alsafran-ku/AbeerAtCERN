@@ -243,7 +243,11 @@ public:
 		/*status*/      MPI_STATUS_IGNORE
 
 		);
+	    printf("res in w\n");
+	    for (int i=0;i<v1.size();i++)
+		    printf(" r%d > %f",rank_, v1[i]);
 
+	    printf("\n");
 	
     }
    //end of blockingSend
@@ -261,40 +265,35 @@ public:
             v2.resize(vec_size);
 	    
 	    //widow buffer
-	    float *win_buff = (float *)malloc (vec_size * sizeof(float));
+	    float *win_buff = (float *)malloc (2*vec_size * sizeof(float));
 	    
 	    //creating window
-	    MPI_Win_create(&win_buff[0],vec_size*sizeof(float), sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win);
+	    MPI_Win_create(&win_buff[0],2*vec_size*sizeof(float), sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win);
 
 	    //fence 1
 	    MPI_Win_fence(0,win);
-	    //fence 2
-	    MPI_Win_fence(0,win); //put 1 from root
-
-	    //getting v1
-	    for (int i=0;i<vec_size ;i++){
+    
+	    //fence 2 // getting the vector
+	    MPI_Win_fence(0,win); //put the double vector(v1 & v2) from root
+	 
+	    int j=0;
+	    for (int i=0;i< 2*vec_size ;i++){
                     //copying from window to v1
-                     v1[i] = win_buff[i];
-            }
-
-	    //getting v2
-	    //fence 3 
-	    MPI_Win_fence(0,win); //put 2 from root
-	    
- 	    for (int i=0;i<vec_size ;i++){
-                    //copying from window to v1
-                     v2[i] = win_buff[i];
-            }
+                    //the middle of the vector to the end is for the second vector
+		    if(i>=(2*vec_size)/2){ v2[j] = win_buff[i] ; j++; }
+		    //the 1st vector is from 0 to the half of the vector 
+		    else{ v1[i] = win_buff[i];}
+	    }
 
 	    //calculating the summation of 2 vectors
-	    for(int i=0;i<10;i++){
+	    for(int i=0;i<vec_size;i++){
 		    v1[i] += v2[i];
 	    }
 
+
 	    //sending back the results to proc 0 window
 	    MPI_Put(&v1[0],v1.size(),MPI_FLOAT, 0,0,v1.size(),MPI_FLOAT,win);
-	    
-	    //fence 4 
+	    //fence 3
 	    MPI_Win_fence(0,win);
 
 	    MPI_Win_free(&win);

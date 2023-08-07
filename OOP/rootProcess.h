@@ -13,7 +13,6 @@
 #include <unistd.h>
 #include <cmath>  // for abs() from <cmath>
 #include "processInterface.h"
-
 class RootProcess: public MPIBase {
 	public:
 
@@ -280,7 +279,9 @@ class RootProcess: public MPIBase {
 		std::pair<float, float> blockingSendRecv() override {
 			// Send input data from root process to worker processes.
 			int batchSize = v1_.size() / (size_ - 1); //the size for each process execluding root
-			int extraBatches = v1_.size() % (size_ - 1); //the size for the batches thatll get the extra (%) execluding root
+
+			//the size for the batches thatll get the extra (%) execluding root
+			int extraBatches = v1_.size() % (size_ - 1); 
 
 			float startTime = MPI_Wtime();
 
@@ -364,6 +365,14 @@ class RootProcess: public MPIBase {
 			endTime = MPI_Wtime();
 			recvDuration = (endTime - startTime)*1000 ;
 
+
+
+			printf("res in r\n");
+			for (int i=0 ;i<result.size();i++)
+				printf("r%d %f >> ", rank_, result[i]);
+
+			printf("\n");
+
 			checkResult(result);
 			return std::pair<float, float>(sendDuration, recvDuration);
 
@@ -372,43 +381,53 @@ class RootProcess: public MPIBase {
 		//beginning of oneSidedComm 
 		std::pair<float, float> oneSidedComm() override {
 			// Send input data from root process to worker processes.
-			//sending vec size
+			// sending vec size
 			int vec_size = v1_.size();
 			MPI_Send(&vec_size,1,MPI_INT,1,0,MPI_COMM_WORLD);
 
-			float *win_buff = (float *)malloc(v1_.size()*sizeof(float));
+			//resize the result vec 
+			result.resize(v1_.size());
+
+			//widow buffer
+			//				2 is for double the size
+            		float *win_buff = (float *)malloc (2*vec_size * sizeof(float));
+
 			//creating a window
 			MPI_Win win;
-			MPI_Win_create(&win_buff[0],v1_.size()*sizeof(float),sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win);
+			//			  2 is for double the size
+			MPI_Win_create(&win_buff[0],2*vec_size*sizeof(float),sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win);
 			//fence 1
 			MPI_Win_fence(0,win);
-			
+
+
+			//concate v1 and v2 into one vector and send it 	
+			std::vector<float> v12;
+			v12.insert( v12.begin(), v1_.begin(), v1_.end() );
+			v12.insert( v12.end(), v2_.begin(), v2_.end() );
+
 			//starting the time of sending
 			float startTime = MPI_Wtime();
 			///////////////////
 
 			//put 1
-			MPI_Put(&v1_[0],vec_size,MPI_FLOAT, 1,0,vec_size, MPI_FLOAT,win);
+			//		2 is for double the size	
+			MPI_Put(&v12[0], 2*vec_size,MPI_FLOAT, 1,0, 2*vec_size, MPI_FLOAT,win);
 			//fence 2 
 			MPI_Win_fence(0,win);
-			//put 2
-			MPI_Put(&v2_[0],vec_size,MPI_FLOAT, 1,0,vec_size, MPI_FLOAT,win);
-			//fence 3
-			MPI_Win_fence(0,win);
-
+			
+						
 			//ending the time 
 			float endTime = MPI_Wtime();
 			sendDuration = (endTime - startTime) * 1000;
 			////////////////
 
-			result.resize(v1_.size()) ;
-			
+
 			//starting the time for receiving 
 			startTime = MPI_Wtime();
 			////////////////////////
 
 			//getting the result from worker	
-			//fence 4
+			//fence 3 
 			MPI_Win_fence(0,win);
 
 			//ending the time of receiving 
@@ -416,20 +435,19 @@ class RootProcess: public MPIBase {
 			recvDuration = (endTime - startTime)*1000 ;
 			/////////////////////
 
-			for (int i =0;i<vec_size;i++)
-			{	//copying from window to result buff
+			//cpy from window to result vec 
+			for(int i=0 ;i <vec_size;i++)
 				result[i] = win_buff[i];
-			}
 
 			checkResult(result); //check result
-			MPI_Win_free(&win); //freeing the window 
-			free(win_buff); //freeing the buff
-
+			MPI_Win_free(&win); //freeing the window
+		        free(win_buff);	
 			return std::pair<float, float>(sendDuration, recvDuration);
 
 		}//end of oneSidedComm
 
-			private:
+				
+		private:
 		const int precisionFactor = 4;
 		std::vector<float> v1_;
 		std::vector<float> v2_;
@@ -450,6 +468,7 @@ class RootProcess: public MPIBase {
 				v2_.push_back(dis(gener));
 				//validationReference_.push_back(mainInput1_[i] + mainInput2_[i]);
 			}
+			
 		}
 
 		void checkResult(std::vector<float> resultVect){

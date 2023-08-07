@@ -48,7 +48,8 @@ std::tuple<int, std::vector<int>, int> parseCommands(int argc, char* argv[]){
 				break;
 			case COMMUNICATION_METHOD:
 				try {
-					int inputNum = std::stoll(optarg, nullptr, 0); // Sending Methods selected by user (e.g. 34 user selected methods blocking and nonblocking)
+					// Sending Methods selected by user (e.g. 34 user selected methods blocking and nonblocking)
+					int inputNum = std::stoll(optarg, nullptr, 0); 
 					while(inputNum > 0 ){
 						int digit = inputNum % 10; 
 						if (digit > MPI_METHODS_COUNT) {
@@ -67,7 +68,8 @@ std::tuple<int, std::vector<int>, int> parseCommands(int argc, char* argv[]){
 				break;
 			case ITERATIONS:
 				try {
-					iterations = std::stoll(optarg, nullptr, 0);  // Set the average run count based on the command-line argument.
+					// Set the average run count based on the command-line argument.
+					iterations = std::stoll(optarg, nullptr, 0);  
 				} catch (std::exception& err) {
 					std::cout << "\n\tError: Argument n must be an integer!";
 					std::cout << "\n\t" << err.what() << std::endl;
