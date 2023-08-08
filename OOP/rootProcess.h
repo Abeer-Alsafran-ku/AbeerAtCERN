@@ -380,14 +380,9 @@ class RootProcess: public MPIBase {
 			//resize the result vec 
 			result.resize(v1_.size());
 
-			//widow buffer
-			//				2 is for double the size
-            		float *win_buff = (float *)malloc (2*vec_size * sizeof(float));
-
 			//creating a window
 			MPI_Win win;
-			//			  2 is for double the size
-			MPI_Win_create(&win_buff[0],2*vec_size*sizeof(float),sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win);
+			MPI_Win_create(&result[0],vec_size*sizeof(float),sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win);
 			//fence 1
 			MPI_Win_fence(0,win);
 
@@ -419,6 +414,7 @@ class RootProcess: public MPIBase {
 			////////////////////////
 
 			//getting the result from worker	
+			MPI_Get(&result[0],vec_size,MPI_FLOAT,1,0,vec_size,MPI_FLOAT,win);
 			//fence 3 
 			MPI_Win_fence(0,win);
 
@@ -426,14 +422,9 @@ class RootProcess: public MPIBase {
 			endTime = MPI_Wtime();
 			recvDuration = (endTime - startTime)*1000 ;
 			/////////////////////
-
-			//cpy from window to result vec 
-			for(int i=0 ;i <vec_size;i++)
-				result[i] = win_buff[i];
-
+			
 			checkResult(result); //check result
 			MPI_Win_free(&win); //freeing the window
-		        free(win_buff);	
 			return std::pair<float, float>(sendDuration, recvDuration);
 
 		}//end of oneSidedComm

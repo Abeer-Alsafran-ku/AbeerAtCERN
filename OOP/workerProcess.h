@@ -286,6 +286,7 @@ public:
 	    }
 
 
+
 	    //sending back the results to proc 0 window
 	    MPI_Put(&v1[0],v1.size(),MPI_FLOAT, 0,0,v1.size(),MPI_FLOAT,win);
 	    //fence 3
