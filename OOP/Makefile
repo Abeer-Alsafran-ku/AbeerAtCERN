@@ -21,7 +21,7 @@ three:
 	mpirun -n 2 main3 -s 10 -f 3 -i 2
 four:
 	mpicxx mainoop.cc -o main4
-	mpirun -n 2 main4 -s 20 -f 4 -i 1
+	mpirun -n 2 main4 -s 20 -f 4 -i 2 
 five:
 	mpicxx mainoop.cc -o main5
 	mpirun -n 2 main5 -s 10 -f 5 -i 2

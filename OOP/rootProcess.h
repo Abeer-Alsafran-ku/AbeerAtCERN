@@ -365,14 +365,6 @@ class RootProcess: public MPIBase {
 			endTime = MPI_Wtime();
 			recvDuration = (endTime - startTime)*1000 ;
 
-
-
-			printf("res in r\n");
-			for (int i=0 ;i<result.size();i++)
-				printf("r%d %f >> ", rank_, result[i]);
-
-			printf("\n");
-
 			checkResult(result);
 			return std::pair<float, float>(sendDuration, recvDuration);
 

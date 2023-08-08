@@ -92,12 +92,12 @@ void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, i
 	std::fstream fd;
 	fd.open("secondry_result.csv", std::fstream::in | std::fstream::out | std::fstream::app);
 	if( !fd ){ //file cannot be opened 
-		std::cout<<"File Cannot be opened1\n";
+		std::cout<<"File Cannot be opened!\n";
 		exit(0);
 	}
 	else{ //file is opened 
 		//write to the file the results
-		fd.seekg(0, std::ios::end);
+		fd.seekg(0, std::ios::end); //seek the end of the file 
 		int file_size = fd.tellg();
 
 		if (file_size == 0) //first time to open and write to a file 
@@ -106,15 +106,15 @@ void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, i
 			fd <<"Communication Method"<<","
 			   <<"Scatter/Send"<< ","
 		           <<"Gather/Receive"<<","
-			   <<"Iterations"<<","
+			   <<"Iterations"
 			   << "\n";
 			// Print the execution times and related information
 			for (int i = 0; i < executionTimes.size(); ++i) {
 				auto [commMethod, avgSendTime, avgRecvTime] = executionTimes[i];
 				fd << COMM_METHOD_NAMES[commMethod-1] << ","
 				<< avgSendTime << ","
-				<< avgRecvTime << ", "
-				<< iterations<< ",";
+				<< avgRecvTime << ","
+				<< iterations;
 			}
 			fd << "\n";
 			fd.close();
@@ -125,8 +125,8 @@ void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, i
                                 auto [commMethod, avgSendTime, avgRecvTime] = executionTimes[i];
                                 fd << COMM_METHOD_NAMES[commMethod-1] << ","
                                 << avgSendTime << ","
-                                << avgRecvTime << ", "
-                                << iterations<< ",";
+                                << avgRecvTime << ","
+                                << iterations ;
                         }
                         fd << "\n";
                         fd.close();

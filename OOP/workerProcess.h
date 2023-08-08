@@ -243,12 +243,7 @@ public:
 		/*status*/      MPI_STATUS_IGNORE
 
 		);
-	    printf("res in w\n");
-	    for (int i=0;i<v1.size();i++)
-		    printf(" r%d > %f",rank_, v1[i]);
 
-	    printf("\n");
-	
     }
    //end of blockingSend
 
