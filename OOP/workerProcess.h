@@ -255,11 +255,6 @@ public:
 	    //receiving the size of vectors  
 	    MPI_Recv(&vec_size,1 ,MPI_INT,0,0,MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	   
-	    // Resize vectors
-	    v1.resize(vec_size);
-            v2.resize(vec_size);
-	   
-
 	    //widow buffer
 	    float *win_buff = (float *)malloc(2*vec_size*sizeof(float));
 	    /////////////////////////// creating window //////////////////////////
@@ -272,23 +267,9 @@ public:
 	    //fence 2 /////////////////////// getting the vector ////////////////
 	    MPI_Win_fence(0,win); //put the double vector(v1 & v2) from root
 	 
-	    /////////// splitting the data from large vec to 2 smaller vecs /////////////
-	    int j=0;
-	    for (int i=0;i< 2*vec_size ;i++){
-                    //copying from window to v1
-                    //the middle of the vector to the end is for the second vector
-		    if(i>=(2*vec_size)/2){ v2[j] = win_buff[i] ; j++; }
-		    //the 1st vector is from 0 to the half of the vector 
-		    else{ v1[i] = win_buff[i];}
-	    }
-
-	    //////////////////// end of getting the vectors /////////////////////////
-
-
 	    //////////////// calculating the summation of 2 vectors //////////////////
-	    for(int i=0;i<vec_size;i++){
-		    //v1[i] += v2[i];
-		    win_buff[i] = v1[i] + v2[i];
+	    for(int i=0;i< vec_size ;i++){
+		    win_buff[i] = win_buff[i] + win_buff[i+vec_size];
 	    }
 	    /////////////////////// end of calculation ///////////////////////
 	    

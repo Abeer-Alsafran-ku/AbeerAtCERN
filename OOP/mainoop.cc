@@ -86,7 +86,7 @@ std::tuple<int, std::vector<int>, int> parseCommands(int argc, char* argv[]){
 
 
 // printing to a csv file 
-void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, int iterations) {
+void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, int iterations,int vecSize,int size) {
 	/*Printing to the file*/
 	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV"," ", "BLOCKING SENDRECV","ONE SIDED"};
 	std::fstream fd;
@@ -106,7 +106,9 @@ void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, i
 			fd <<"Communication Method"<<","
 			   <<"Scatter/Send"<< ","
 		           <<"Gather/Receive"<<","
-			   <<"Iterations"
+			   <<"Iterations"<<","
+			   <<"Vector Size"<<","
+			   <<"Processes"
 			   << "\n";
 			// Print the execution times and related information
 			for (int i = 0; i < executionTimes.size(); ++i) {
@@ -114,7 +116,9 @@ void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, i
 				fd << COMM_METHOD_NAMES[commMethod-1] << ","
 				<< avgSendTime << ","
 				<< avgRecvTime << ","
-				<< iterations;
+				<< iterations << ","
+				<< vecSize<< ","
+				<<size ;
 			}
 			fd << "\n";
 			fd.close();
@@ -126,7 +130,9 @@ void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, i
                                 fd << COMM_METHOD_NAMES[commMethod-1] << ","
                                 << avgSendTime << ","
                                 << avgRecvTime << ","
-                                << iterations ;
+                                << iterations << ","
+				<< vecSize<<","
+				<< size;
                         }
                         fd << "\n";
                         fd.close();
@@ -136,12 +142,12 @@ void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, i
 
 
 // printing to a text file 
-void printFile(const std::vector<std::tuple<int, float, float>> executionTimes, int iterations) {
+void printFile(const std::vector<std::tuple<int, float, float>> executionTimes, int iterations,int vecSize,int size) {
 	/*Printing to the file*/
 	/*Printing to the output screen*/	
 	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV"," ", "BLOCKING SENDRECV","ONE SIDED"};
 	const auto COL1 = 25, COL2 = 15, COL3 = 15, COL4 = 11;
-	std::string ROW    = "================================================================================";
+	std::string ROW    = "============================================================================================================";
 	std::string DASHES = "--------------------------------------------------------------------------------";
 	std::cout.flags(std::ios::fixed | std::ios::showpoint);
 	std::cout.setf(std::ios::fixed, std::ios::floatfield);
@@ -163,7 +169,9 @@ void printFile(const std::vector<std::tuple<int, float, float>> executionTimes, 
 			<<std::setw(COL1)<<"Communication Method"<<"|| "
 			<<std::setw(COL2)<<"Scatter/Send"<<"|| "
 			<<std::setw(COL3)<<"Gather/Receive"<<"|| "
-			<<std::setw(COL4)<<"Iterations"<<"||"
+			<<std::setw(COL4)<<"Iterations"<<"|| "
+			<<std::setw(COL4)<<"Vector Size"<<"|| "
+			<<std::setw(COL4)<<"Processes"<<"||"
 			<< "\n\t"<<ROW;
 
 		// Print the execution times and related information
@@ -176,7 +184,9 @@ void printFile(const std::vector<std::tuple<int, float, float>> executionTimes, 
 				<< std::setw(COL1) << COMM_METHOD_NAMES[commMethod-1] << "|| "
 				<< std::setw(COL2) << avgSendTime << "|| "
 				<< std::setw(COL3) << avgRecvTime << "|| "
-				<< std::setw(COL4) << iterations<< "||";
+				<< std::setw(COL4) << iterations<< "|| "
+				<< std::setw(COL4) << vecSize<< "|| "
+				<< std::setw(COL4) << size<< "||";
 
 		}
 
@@ -188,12 +198,12 @@ void printFile(const std::vector<std::tuple<int, float, float>> executionTimes, 
 
 
 // print to the standared output 
-void printResults(const std::vector<std::tuple<int, float, float>> executionTimes, int iterations) {
+void printResults(const std::vector<std::tuple<int, float, float>> executionTimes, int iterations,int vecSize,int size) {
 
 	/*Printing to the output screen*/	
 	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV"," ", "BLOCKING SENDRECV","ONE SIDED"};
 	const auto COL1 = 25, COL2 = 15, COL3 = 15, COL4 = 11;
-	std::string ROW    = "================================================================================";
+	std::string ROW    = "============================================================================================================";
 	std::string DASHES = "--------------------------------------------------------------------------------";
 	std::cout.flags(std::ios::fixed | std::ios::showpoint);
 	std::cout.setf(std::ios::fixed, std::ios::floatfield);
@@ -205,10 +215,10 @@ void printResults(const std::vector<std::tuple<int, float, float>> executionTime
 		<<std::setw(COL1)<<"Communication Method"<<"|| "
 		<<std::setw(COL2)<<"Scatter/Send"<<"|| "
 		<<std::setw(COL3)<<"Gather/Receive"<<"|| "
-		<<std::setw(COL4)<<"Iterations"<<"||"
+		<<std::setw(COL4)<<"Iterations"<<"|| "
+		<<std::setw(COL4)<<"Vector Size"<<"|| "
+		<<std::setw(COL4)<<"Processes"<<"||"
 		<< "\n\t"<<ROW;
-
-
 
 	// Print the execution times and related information
 	for (int i = 0; i < executionTimes.size(); ++i) {
@@ -220,7 +230,9 @@ void printResults(const std::vector<std::tuple<int, float, float>> executionTime
 			<< std::setw(COL1) << COMM_METHOD_NAMES[commMethod-1] << "|| "
 			<< std::setw(COL2) << avgSendTime << "|| "
 			<< std::setw(COL3) << avgRecvTime << "|| "
-			<< std::setw(COL4) << iterations<< "||";
+			<< std::setw(COL4) << iterations<< "|| "
+			<< std::setw(COL4) << vecSize<< "|| "
+			<< std::setw(COL4) << size<< "||";
 
 	}
 
@@ -261,8 +273,8 @@ int main(int argc, char* argv[]) {
 	}
 
 	if (rank == 0){ //root 
-		printResults(results, iterations); //print to std output
-		//printCSV(results, iterations); //print to a csv file 
+		printResults(results, iterations,vecSize,size); //print to std output
+		//printCSV(results, iterations,vecSize,size); //print to a csv file 
 	}
 
 	MPI_Finalize(); 
