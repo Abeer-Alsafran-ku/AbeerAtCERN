@@ -258,19 +258,21 @@ public:
 	    // Resize vectors
 	    v1.resize(vec_size);
             v2.resize(vec_size);
-	    
-	    //widow buffer
-	    float *win_buff = (float *)malloc (2*vec_size * sizeof(float));
-	    
-	    //creating window
-	    MPI_Win_create(&win_buff[0],2*vec_size*sizeof(float), sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win);
+	   
 
+	    //widow buffer
+	    float *win_buff = (float *)malloc(2*vec_size*sizeof(float));
+	    /////////////////////////// creating window //////////////////////////
+	    MPI_Win_create(&win_buff[0],2*vec_size*sizeof(float), sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win);
 	    //fence 1
 	    MPI_Win_fence(0,win);
     
-	    //fence 2 // getting the vector
+	    ////////////////////////// end of creating the window ///////////////
+
+	    //fence 2 /////////////////////// getting the vector ////////////////
 	    MPI_Win_fence(0,win); //put the double vector(v1 & v2) from root
 	 
+	    /////////// splitting the data from large vec to 2 smaller vecs /////////////
 	    int j=0;
 	    for (int i=0;i< 2*vec_size ;i++){
                     //copying from window to v1
@@ -280,18 +282,20 @@ public:
 		    else{ v1[i] = win_buff[i];}
 	    }
 
-	    //calculating the summation of 2 vectors
+	    //////////////////// end of getting the vectors /////////////////////////
+
+
+	    //////////////// calculating the summation of 2 vectors //////////////////
 	    for(int i=0;i<vec_size;i++){
-		    v1[i] += v2[i];
+		    //v1[i] += v2[i];
+		    win_buff[i] = v1[i] + v2[i];
 	    }
-
-
-
-	    //sending back the results to proc 0 window
-	    MPI_Put(&v1[0],v1.size(),MPI_FLOAT, 0,0,v1.size(),MPI_FLOAT,win);
+	    /////////////////////// end of calculation ///////////////////////
+	    
 	    //fence 3
-	    MPI_Win_fence(0,win);
-
+	    MPI_Win_fence(0,win); //get from root: root is getting the data from workers window 
+	    
+	    //free the window
 	    MPI_Win_free(&win);
 	    free(win_buff);
 	}

@@ -30,8 +30,7 @@ six:
 	mpirun -n 2 main6 -s 10 -f 6 -i 2 
 seven:
 	mpicxx mainoop.cc -o main7
-	mpirun -n 2 main7 -s 10 -f 7 -i 2 
-
+	mpirun -n 5 main7 -s 10 -f 7 -i 5 
 
 clean:
 	rm ${EXECS}

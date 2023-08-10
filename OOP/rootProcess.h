@@ -375,53 +375,64 @@ class RootProcess: public MPIBase {
 			// Send input data from root process to worker processes.
 			// sending vec size
 			int vec_size = v1_.size();
-			MPI_Send(&vec_size,1,MPI_INT,1,0,MPI_COMM_WORLD);
+
+			//sending the size to multi workers 
+			for(int i=1;i<size_;i++)
+				MPI_Send(&vec_size,1,MPI_INT,i,0,MPI_COMM_WORLD);
 
 			//resize the result vec 
 			result.resize(v1_.size());
 
-			//creating a window
+			//////////////////// creating a window //////////////////////
 			MPI_Win win;
 			MPI_Win_create(&result[0],vec_size*sizeof(float),sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win);
 			//fence 1
 			MPI_Win_fence(0,win);
+			//////////////////// end creating window ///////////////////
 
-
-			//concate v1 and v2 into one vector and send it 	
+			//////////////// concate v1 and v2 into one vector and send it ////////////	
 			std::vector<float> v12;
 			v12.insert( v12.begin(), v1_.begin(), v1_.end() );
 			v12.insert( v12.end(), v2_.begin(), v2_.end() );
+			////////////// end of cancatination ///////////////////////
 
 			//starting the time of sending
 			float startTime = MPI_Wtime();
-			///////////////////
 
-			//put 1
-			//		2 is for double the size	
-			MPI_Put(&v12[0], 2*vec_size,MPI_FLOAT, 1,0, 2*vec_size, MPI_FLOAT,win);
+			////////////////////// sending the vectors to workers /////////////////////////
+			for(int i=1; i<size_;i++){
+				//		2 is for double the size	
+				MPI_Put(&v12[0], 2*vec_size,MPI_FLOAT, i,0, 2*vec_size, MPI_FLOAT,win);
+			}
 			//fence 2 
 			MPI_Win_fence(0,win);
 			
-						
+			///////////////////////// end of sending the data /////////////////////////////
+
 			//ending the time 
 			float endTime = MPI_Wtime();
 			sendDuration = (endTime - startTime) * 1000;
-			////////////////
-
-
+			
+			///////////////////////// getting the data from workers ////////////////////////
+			
 			//starting the time for receiving 
 			startTime = MPI_Wtime();
-			////////////////////////
-
-			//getting the result from worker	
-			MPI_Get(&result[0],vec_size,MPI_FLOAT,1,0,vec_size,MPI_FLOAT,win);
+			
 			//fence 3 
 			MPI_Win_fence(0,win);
+			
+			//getting the result from worker	
+			for(int i=1; i<size_; i++){
+				//getting results from multi workers
+				MPI_Get(&result[0],vec_size,MPI_FLOAT,i,0,vec_size,MPI_FLOAT,win);
+			}
 
-			//ending the time of receiving 
+			//ending the time of receiving  
 			endTime = MPI_Wtime();
 			recvDuration = (endTime - startTime)*1000 ;
-			/////////////////////
+			
+
+			//////////////////////////// ending getting the data //////////////////////////// 
 			
 			checkResult(result); //check result
 			MPI_Win_free(&win); //freeing the window
