@@ -23,7 +23,7 @@ const int MPI_METHODS_COUNT = 7;
 
 
 
-std::tuple<int, std::vector<int>, int> parseCommands(int argc, char* argv[]){
+std::tuple<int, std::vector<int>, int,int> parseCommands(int argc, char* argv[]){
 
 	enum INPUT_OPTIONS { VECTOR_SIZE = 's', COMMUNICATION_METHOD = 'f', ITERATIONS = 'i'};
 
@@ -34,6 +34,7 @@ std::tuple<int, std::vector<int>, int> parseCommands(int argc, char* argv[]){
 
 
 	int input;   // Parsing command-line arguments
+	int inputNum_;   // Parsing command-line arguments
 
 	while ((input = getopt(argc, argv, "s:f:i:")) != -1) {              
 		switch (input) {
@@ -49,7 +50,8 @@ std::tuple<int, std::vector<int>, int> parseCommands(int argc, char* argv[]){
 			case COMMUNICATION_METHOD:
 				try {
 					// Sending Methods selected by user (e.g. 34 user selected methods blocking and nonblocking)
-					int inputNum = std::stoll(optarg, nullptr, 0); 
+					inputNum_ = std::stoll(optarg, nullptr, 0); 
+					int inputNum = inputNum_;
 					while(inputNum > 0 ){
 						int digit = inputNum % 10; 
 						if (digit > MPI_METHODS_COUNT) {
@@ -81,16 +83,37 @@ std::tuple<int, std::vector<int>, int> parseCommands(int argc, char* argv[]){
 				abort();
 		}
 	}
-	return std::make_tuple(vecSize, commMethods, iterations); 
+	return std::make_tuple(vecSize, commMethods, iterations,inputNum_); 
 }
 
 
 // printing to a csv file 
-void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, int iterations,int vecSize,int size) {
+void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, int iterations,int vecSize,int size,int inputNum) {
 	/*Printing to the file*/
 	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV"," ", "BLOCKING SENDRECV","ONE SIDED"};
-	std::fstream fd;
-	fd.open("secondry_result.csv", std::fstream::in | std::fstream::out | std::fstream::app);
+	std::fstream fd;			
+	if (COMM_METHOD_NAMES[inputNum-1] == "NONBLOCKING SCATTER"){
+		fd.open("NB_scatter.csv", std::fstream::in | std::fstream::out | std::fstream::app);
+	}
+	else if (COMM_METHOD_NAMES[inputNum-1] == "BLOCKING SCATTER"){
+		fd.open("B_scatter.csv", std::fstream::in | std::fstream::out | std::fstream::app);
+	}
+	else if (COMM_METHOD_NAMES[inputNum-1] == "BLOCKING SEND/RECV"){
+		fd.open("B_send_Recv.csv", std::fstream::in | std::fstream::out | std::fstream::app);
+	}
+	else if (COMM_METHOD_NAMES[inputNum-1] == "NONBLOCKING SEND/RECV"){
+		fd.open("NB_send_Recv.csv", std::fstream::in | std::fstream::out | std::fstream::app);
+	}
+	else if (COMM_METHOD_NAMES[inputNum-1] == "BLOCKING SENDRECV"){
+		fd.open("B_sendRecv.csv", std::fstream::in | std::fstream::out | std::fstream::app);
+	}
+	else if (COMM_METHOD_NAMES[inputNum-1] == "ONE SIDED"){
+		fd.open("NB_oneSided.csv", std::fstream::in | std::fstream::out | std::fstream::app);
+	}
+	else{
+		std::cout<< "File name not found!\n";
+	}
+
 	if( !fd ){ //file cannot be opened 
 		std::cout<<"File Cannot be opened!\n";
 		exit(0);
@@ -120,8 +143,6 @@ void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, i
 				<< vecSize<< ","
 				<<size ;
 			}
-			fd << "\n";
-			fd.close();
 		} 
 		else{ //not the first time i.e. data exisit in the file 
 			// Print the execution times and related information
@@ -134,10 +155,11 @@ void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, i
 				<< vecSize<<","
 				<< size;
                         }
-                        fd << "\n";
-                        fd.close();
+                        
 		}
-	}
+	}     
+	fd << "\n";	
+	fd.close();
 }//end of printCSV 
 
 
@@ -253,7 +275,7 @@ int main(int argc, char* argv[]) {
 
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-	auto [vecSize, commMethods, iterations] = parseCommands(argc,argv);
+	auto [vecSize, commMethods, iterations,inputNum_] = parseCommands(argc,argv);
 
 	std::unique_ptr<MPIBase> MPIObject ;
 
@@ -274,7 +296,7 @@ int main(int argc, char* argv[]) {
 
 	if (rank == 0){ //root 
 		printResults(results, iterations,vecSize,size); //print to std output
-		//printCSV(results, iterations,vecSize,size); //print to a csv file 
+		printCSV(results, iterations,vecSize,size,inputNum_); //print to a csv file 
 	}
 
 	MPI_Finalize(); 

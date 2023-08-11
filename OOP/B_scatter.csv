@@ -1,0 +1,2 @@
+Communication Method,Scatter/Send,Gather/Receive,Iterations,Vector Size,Processes
+BLOCKING SCATTER,0.00334631,0.00621361,100,1000,4
