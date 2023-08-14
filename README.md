@@ -28,9 +28,10 @@ MPIData is a struct that encapsulates the various data needed for MPI processing
 * calculateNumDataToSend(): Computes how many data elements will be sent to each process.
 * calculateDisplacementIndices(): Identifies the index at which each process should begin handling data.
 * printResultsAndCheck(): Compares and prints the output results with reference data to ensure correctness.
-* The timing functions (nonBlockingScatter(), blockingScatter(), nonBlockingSend(), blockingSend(), multiNonBlockingSend()) each return the average time taken for the scatter/send and gather/receive operations over multiple runs for non-blocking scatter, blocking scatter, non-blocking send, blocking send, and non-blocking send with multiple tasks, respectively.
-* The compareExecutionTimes() function prints out the time taken for each function selected by the user.
+* The timing functions (nonBlockingScatter(), blockingScatter(), nonBlockingSend(), blockingSend(), multiNonBlockingSend(), blockingSendRecv(), oneSidedComm()) each return the average time taken for the scatter/send and gather/receive operations over multiple runs for non-blocking scatter, blocking scatter, non-blocking send, blocking send, blocking sendRecv, and oneSided, with multiple tasks, respectively.
+* The compareExecutionTimes() function prints out the time taken for each function the user selects.
 * The calculateAverageTime() function computes the average time taken over multiple runs for each function.
+* The printCSV() function writes to the CSV file of the current function. 
 
 ## Usage
 
