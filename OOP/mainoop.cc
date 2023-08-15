@@ -90,7 +90,7 @@ std::tuple<int, std::vector<int>, int,int> parseCommands(int argc, char* argv[])
 // printing to a csv file 
 void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, int iterations,int vecSize,int size,int inputNum) {
 	/*Printing to the file*/
-	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV"," ", "BLOCKING SENDRECV","ONE SIDED"};
+	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV","ONE SIDED MASTER", "BLOCKING SENDRECV","ONE SIDED WORKER"};
 	std::fstream fd;			
 	if (COMM_METHOD_NAMES[inputNum-1] == "NONBLOCKING SCATTER"){
 		fd.open("NB_scatter.csv", std::fstream::in | std::fstream::out | std::fstream::app);
@@ -107,7 +107,8 @@ void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, i
 	else if (COMM_METHOD_NAMES[inputNum-1] == "BLOCKING SENDRECV"){
 		fd.open("B_sendRecv.csv", std::fstream::in | std::fstream::out | std::fstream::app);
 	}
-	else if (COMM_METHOD_NAMES[inputNum-1] == "ONE SIDED"){
+	else if (COMM_METHOD_NAMES[inputNum-1] == "ONE SIDED WORKER" || COMM_METHOD_NAMES[inputNum-1] == "ONE SIDED MASTER" ){
+
 		fd.open("NB_oneSided.csv", std::fstream::in | std::fstream::out | std::fstream::app);
 	}
 	else{
@@ -167,7 +168,7 @@ void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, i
 void printFile(const std::vector<std::tuple<int, float, float>> executionTimes, int iterations,int vecSize,int size) {
 	/*Printing to the file*/
 	/*Printing to the output screen*/	
-	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV"," ", "BLOCKING SENDRECV","ONE SIDED"};
+	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV","ONE SIDED MASTER", "BLOCKING SENDRECV","ONE SIDED WORKER"};
 	const auto COL1 = 25, COL2 = 15, COL3 = 15, COL4 = 11;
 	std::string ROW    = "============================================================================================================";
 	std::string DASHES = "--------------------------------------------------------------------------------";
@@ -223,7 +224,7 @@ void printFile(const std::vector<std::tuple<int, float, float>> executionTimes, 
 void printResults(const std::vector<std::tuple<int, float, float>> executionTimes, int iterations,int vecSize,int size) {
 
 	/*Printing to the output screen*/	
-	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV"," ", "BLOCKING SENDRECV","ONE SIDED"};
+	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV","ONE SIDED MASTER", "BLOCKING SENDRECV","ONE SIDED WORKER"};
 	const auto COL1 = 25, COL2 = 15, COL3 = 15, COL4 = 11;
 	std::string ROW    = "============================================================================================================";
 	std::string DASHES = "--------------------------------------------------------------------------------";
@@ -282,7 +283,7 @@ int main(int argc, char* argv[]) {
 	if(rank != 0){ //worker
 		MPIObject = std::make_unique<WorkerProcess>();
 	}else{ //root 
-		MPIObject = std::make_unique<RootProcess>(vecSize);
+		MPIObject = std::make_unique<MasterProcess>(vecSize);
 	}
 
 	//tuple<commMethod, avgSendTime, avgRecvTime> 

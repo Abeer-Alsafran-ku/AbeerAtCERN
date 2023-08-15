@@ -9,7 +9,8 @@ public:
     virtual std::pair<float, float> blockingScatter() = 0;
     virtual std::pair<float, float> nonBlockingScatter() = 0;
     virtual std::pair<float, float> blockingSendRecv() = 0;
-    virtual std::pair<float, float> oneSidedComm() = 0;
+    virtual std::pair<float, float> oneSidedCommMaster() = 0;
+    virtual std::pair<float, float> oneSidedCommWorker() = 0;
 
     std::pair<float, float> calculateAverageTime(int funcNum, int iterations) {
         std::pair<float, float> averageTime;
@@ -30,13 +31,13 @@ public:
                     timeDuration = blockingSend(); 
                     break;
                 case 5:
-                    //timeDuration = multiNonBlockingSend(); 
+                    timeDuration = oneSidedCommMaster(); 
                     break;
 		case 6:
 		    timeDuration = blockingSendRecv();
 		    break;
 		case 7:
-		    timeDuration = oneSidedComm();
+		    timeDuration = oneSidedCommWorker();
 		    break;
                 default:
                     std::cerr << "\n\n\tError: Invalid function number!\n";
