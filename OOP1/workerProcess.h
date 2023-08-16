@@ -13,10 +13,10 @@
 #include <cmath>  // for abs() from <cmath>
 #include "processInterface.h"
 
-class MPI_Worker : public MPI_TEST {
+class WorkerProcess : public MPIBase {
 
 	public:
-		MPI_Worker(){
+		WorkerProcess(){
 
 			MPI_Comm_size(MPI_COMM_WORLD, &size_);
 			MPI_Comm_rank(MPI_COMM_WORLD, &rank_);

@@ -86,183 +86,6 @@ std::tuple<int, std::vector<int>, int,int> parseCommands(int argc, char* argv[])
 	return std::make_tuple(vecSize, commMethods, iterations,inputNum_); 
 }
 
-
-// printing to a csv file 
-void printCSV(const std::vector<std::tuple<int, float, float>> executionTimes, int iterations,int vecSize,int size,int inputNum) {
-	/*Printing to the file*/
-	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV","ONE SIDED MASTER", "BLOCKING SENDRECV","ONE SIDED WORKER"};
-	std::fstream fd;			
-	if (COMM_METHOD_NAMES[inputNum-1] == "NONBLOCKING SCATTER"){
-		fd.open("NB_scatter.csv", std::fstream::in | std::fstream::out | std::fstream::app);
-	}
-	else if (COMM_METHOD_NAMES[inputNum-1] == "BLOCKING SCATTER"){
-		fd.open("B_scatter.csv", std::fstream::in | std::fstream::out | std::fstream::app);
-	}
-	else if (COMM_METHOD_NAMES[inputNum-1] == "BLOCKING SEND/RECV"){
-		fd.open("B_send_Recv.csv", std::fstream::in | std::fstream::out | std::fstream::app);
-	}
-	else if (COMM_METHOD_NAMES[inputNum-1] == "NONBLOCKING SEND/RECV"){
-		fd.open("NB_send_Recv.csv", std::fstream::in | std::fstream::out | std::fstream::app);
-	}
-	else if (COMM_METHOD_NAMES[inputNum-1] == "BLOCKING SENDRECV"){
-		fd.open("B_sendRecv.csv", std::fstream::in | std::fstream::out | std::fstream::app);
-	}
-	else if (COMM_METHOD_NAMES[inputNum-1] == "ONE SIDED WORKER" || COMM_METHOD_NAMES[inputNum-1] == "ONE SIDED MASTER" ){
-
-		fd.open("NB_oneSided.csv", std::fstream::in | std::fstream::out | std::fstream::app);
-	}
-	else{
-		std::cout<< "File name not found!\n";
-	}
-
-	if( !fd ){ //file cannot be opened 
-		std::cout<<"File Cannot be opened!\n";
-		exit(0);
-	}
-	else{ //file is opened 
-		//write to the file the results
-		fd.seekg(0, std::ios::end); //seek the end of the file 
-		int file_size = fd.tellg();
-
-		if (file_size == 0) //first time to open and write to a file 
-		{
-
-			fd <<"Communication Method"<<","
-			   <<"Scatter/Send"<< ","
-		           <<"Gather/Receive"<<","
-			   <<"Iterations"<<","
-			   <<"Vector Size"<<","
-			   <<"Processes"
-			   << "\n";
-			// Print the execution times and related information
-			for (int i = 0; i < executionTimes.size(); ++i) {
-				auto [commMethod, avgSendTime, avgRecvTime] = executionTimes[i];
-				fd << COMM_METHOD_NAMES[commMethod-1] << ","
-				<< avgSendTime << ","
-				<< avgRecvTime << ","
-				<< iterations << ","
-				<< vecSize<< ","
-				<<size ;
-			}
-		} 
-		else{ //not the first time i.e. data exisit in the file 
-			// Print the execution times and related information
-                        for (int i = 0; i < executionTimes.size(); ++i) {
-                                auto [commMethod, avgSendTime, avgRecvTime] = executionTimes[i];
-                                fd << COMM_METHOD_NAMES[commMethod-1] << ","
-                                << avgSendTime << ","
-                                << avgRecvTime << ","
-                                << iterations << ","
-				<< vecSize<<","
-				<< size;
-                        }
-                        
-		}
-	}     
-	fd << "\n";	
-	fd.close();
-}//end of printCSV 
-
-
-// printing to a text file 
-void printFile(const std::vector<std::tuple<int, float, float>> executionTimes, int iterations,int vecSize,int size) {
-	/*Printing to the file*/
-	/*Printing to the output screen*/	
-	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV","ONE SIDED MASTER", "BLOCKING SENDRECV","ONE SIDED WORKER"};
-	const auto COL1 = 25, COL2 = 15, COL3 = 15, COL4 = 11;
-	std::string ROW    = "============================================================================================================";
-	std::string DASHES = "--------------------------------------------------------------------------------";
-	std::cout.flags(std::ios::fixed | std::ios::showpoint);
-	std::cout.setf(std::ios::fixed, std::ios::floatfield);
-	std::cout.precision(4);
-
-
-	std::fstream fd;
-	fd.open("result_file.txt", std::fstream::in | std::fstream::out | std::fstream::app);
-	if( !fd ){ //file cannot be opened 
-		std::cout<<"File Cannot be opened1\n";
-		exit(0);
-	}
-	else{ //file is opened 
-
-		//write to the file the results
-
-		fd << "\n\n\t"<<ROW;
-		fd << "\n\t|| "<<std::left
-			<<std::setw(COL1)<<"Communication Method"<<"|| "
-			<<std::setw(COL2)<<"Scatter/Send"<<"|| "
-			<<std::setw(COL3)<<"Gather/Receive"<<"|| "
-			<<std::setw(COL4)<<"Iterations"<<"|| "
-			<<std::setw(COL4)<<"Vector Size"<<"|| "
-			<<std::setw(COL4)<<"Processes"<<"||"
-			<< "\n\t"<<ROW;
-
-		// Print the execution times and related information
-		for (int i = 0; i < executionTimes.size(); ++i) {
-			if(i > 0) fd << "\n\t"<<DASHES;
-
-			auto [commMethod, avgSendTime, avgRecvTime] = executionTimes[i];
-
-			fd << "\n\t|| " <<std::left
-				<< std::setw(COL1) << COMM_METHOD_NAMES[commMethod-1] << "|| "
-				<< std::setw(COL2) << avgSendTime << "|| "
-				<< std::setw(COL3) << avgRecvTime << "|| "
-				<< std::setw(COL4) << iterations<< "|| "
-				<< std::setw(COL4) << vecSize<< "|| "
-				<< std::setw(COL4) << size<< "||";
-
-		}
-
-		fd << "\n\t"<<ROW<<"\n\n";
-		fd.close();
-	}  
-
-}//end of printFile 
-
-
-// print to the standared output 
-void printResults(const std::vector<std::tuple<int, float, float>> executionTimes, int iterations,int vecSize,int size) {
-
-	/*Printing to the output screen*/	
-	const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV","ONE SIDED MASTER", "BLOCKING SENDRECV","ONE SIDED WORKER"};
-	const auto COL1 = 25, COL2 = 15, COL3 = 15, COL4 = 11;
-	std::string ROW    = "============================================================================================================";
-	std::string DASHES = "--------------------------------------------------------------------------------";
-	std::cout.flags(std::ios::fixed | std::ios::showpoint);
-	std::cout.setf(std::ios::fixed, std::ios::floatfield);
-	std::cout.precision(4);
-
-
-	std::cout << "\n\n\t"<<ROW;
-	std::cout << "\n\t|| "<<std::left
-		<<std::setw(COL1)<<"Communication Method"<<"|| "
-		<<std::setw(COL2)<<"Scatter/Send"<<"|| "
-		<<std::setw(COL3)<<"Gather/Receive"<<"|| "
-		<<std::setw(COL4)<<"Iterations"<<"|| "
-		<<std::setw(COL4)<<"Vector Size"<<"|| "
-		<<std::setw(COL4)<<"Processes"<<"||"
-		<< "\n\t"<<ROW;
-
-	// Print the execution times and related information
-	for (int i = 0; i < executionTimes.size(); ++i) {
-		if(i > 0) std::cout << "\n\t"<<DASHES;    
-
-		auto [commMethod, avgSendTime, avgRecvTime] = executionTimes[i]; 
-
-		std::cout << "\n\t|| " <<std::left
-			<< std::setw(COL1) << COMM_METHOD_NAMES[commMethod-1] << "|| "
-			<< std::setw(COL2) << avgSendTime << "|| "
-			<< std::setw(COL3) << avgRecvTime << "|| "
-			<< std::setw(COL4) << iterations<< "|| "
-			<< std::setw(COL4) << vecSize<< "|| "
-			<< std::setw(COL4) << size<< "||";
-
-	}
-
-	std::cout << "\n\t"<<ROW<<"\n\n";    
-}//end of printResults
-
-
 // mian function
 int main(int argc, char* argv[]) {
 
@@ -278,27 +101,15 @@ int main(int argc, char* argv[]) {
 
 	auto [vecSize, commMethods, iterations,inputNum_] = parseCommands(argc,argv);
 
-	std::unique_ptr<MPIBase> MPIObject ;
+	std::unique_ptr<MPI_TEST> MPIObject ;
 
-	if(rank != 0){ //worker
-		MPIObject = std::make_unique<WorkerProcess>();
-	}else{ //root 
-		MPIObject = std::make_unique<MasterProcess>(vecSize);
+	if(rank == 0){ 
+		MPIObject = std::make_unique<MPI_Master>(vecSize);
+	}else{
+		MPIObject = std::make_unique<MPI_Worker>();
 	}
-
-	//tuple<commMethod, avgSendTime, avgRecvTime> 
-	std::vector<std::tuple<int, float, float>> results; 
-
-
-	for (auto i = 0; i < commMethods.size(); ++i) {
-		auto [avgSendTime, avgRecvTime] =  MPIObject->calculateAverageTime(commMethods[i], iterations);
-		results.push_back(std::make_tuple(commMethods[i], avgSendTime, avgRecvTime));
-	}
-
-	if (rank == 0){ //root 
-		printResults(results, iterations,vecSize,size); //print to std output
-		printCSV(results, iterations,vecSize,size,inputNum_); //print to a csv file 
-	}
+	
+	MPIObject->getTimeMeasurements(vecSize, commMethods, iterations,inputNum_); 
 
 	MPI_Finalize(); 
 

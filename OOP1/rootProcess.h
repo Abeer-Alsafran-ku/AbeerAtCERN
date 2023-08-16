@@ -13,10 +13,12 @@
 #include <unistd.h>
 #include <cmath>  // for abs() from <cmath>
 #include "processInterface.h"
-class MPI_Master: public MPI_TEST{
+class MasterProcess: public MPIBase {
 	public:
 
-		MPI_Master(int vectorSize){ //int comType, int vectorSize, int avg){
+		MasterProcess(int vectorSize){ //int comType, int vectorSize, int avg){
+			MPI_Comm_size(MPI_COMM_WORLD, &size_);
+			MPI_Comm_rank(MPI_COMM_WORLD, &rank_);
 
 			generateRandomData(vectorSize);
 		}
@@ -42,9 +44,9 @@ class MPI_Master: public MPI_TEST{
 
 			float endTime = MPI_Wtime();
 
-			float sendDuration = (endTime - startTime) * 1000;
+			sendDuration = (endTime - startTime) * 1000;
 
-			result_.resize(v1_.size()) ;
+			result.resize(v1_.size()) ;
 
 			startTime = MPI_Wtime();
 
@@ -52,14 +54,14 @@ class MPI_Master: public MPI_TEST{
 			for (int i = 1; i < size_; i++) {
 				int curSize = batchSize + ((extraBatches >= i)? 1 : 0) ; //size of cur Batch
 				//dat            //count  //type //src rank//tag //comm.    //status
-				MPI_Recv(&result_[curIdx], curSize, MPI_FLOAT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+				MPI_Recv(&result[curIdx], curSize, MPI_FLOAT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 				curIdx += curSize;
 			}
 
 			endTime = MPI_Wtime();
-			float recvDuration = (endTime - startTime)*1000 ;
+			recvDuration = (endTime - startTime)*1000 ;
 
-			checkResult(result_);
+			checkResult(result);
 			return std::pair<float, float>(sendDuration, recvDuration);
 
 		}//end of blockingSend
@@ -87,16 +89,16 @@ class MPI_Master: public MPI_TEST{
 			MPI_Waitall( 2*(size_ - 1), requestSend, MPI_STATUS_IGNORE);
 
 			float endTime = MPI_Wtime();
-			float sendDuration = (endTime - startTime)*1000;
+			sendDuration = (endTime - startTime)*1000;
 
-			result_.resize(v1_.size()) ;
+			result.resize(v1_.size()) ;
 
 			startTime = MPI_Wtime();
 
 			curIdx = 0;
 			for (int i = 1; i < size_; i++) {
 				int curSize = batchSize + ((extraBatches >= i)? 1 : 0) ; //size of cur Batch
-				MPI_Irecv(&result_[curIdx], curSize, MPI_FLOAT, i, 0, MPI_COMM_WORLD, &requestRecv[i-1]);
+				MPI_Irecv(&result[curIdx], curSize, MPI_FLOAT, i, 0, MPI_COMM_WORLD, &requestRecv[i-1]);
 				curIdx += curSize;
 			}
 
@@ -107,9 +109,9 @@ class MPI_Master: public MPI_TEST{
 			}
 
 			endTime = MPI_Wtime();
-			float recvDuration = (endTime - startTime)*1000 ;
+			recvDuration = (endTime - startTime)*1000 ;
 
-			checkResult(result_);
+			checkResult(result);
 			return std::pair<float, float>(sendDuration, recvDuration);
 
 		}
@@ -162,9 +164,9 @@ class MPI_Master: public MPI_TEST{
 				    );
 
 			float endTime = MPI_Wtime();
-			result_.resize(v1_.size()) ;
+			result.resize(v1_.size()) ;
 
-			float sendDuration = (endTime - startTime) * 1000;
+			sendDuration = (endTime - startTime) * 1000;
 
 			startTime = MPI_Wtime();
 
@@ -172,7 +174,7 @@ class MPI_Master: public MPI_TEST{
 					NULL, 
 					0, 
 					MPI_FLOAT, 
-					&result_[0], 
+					&result[0], 
 					&numDataPerProcess_[0], 
 					&displacementIndices_[0], 
 					MPI_FLOAT, 
@@ -180,9 +182,9 @@ class MPI_Master: public MPI_TEST{
 					MPI_COMM_WORLD
 				   );
 			endTime = MPI_Wtime();
-			float recvDuration = (endTime - startTime)*1000 ;
+			recvDuration = (endTime - startTime)*1000 ;
 
-			checkResult(result_);
+			checkResult(result);
 
 			return std::pair<float, float>(sendDuration, recvDuration);
 
@@ -243,16 +245,16 @@ class MPI_Master: public MPI_TEST{
 
 
 			float endTime = MPI_Wtime();
-			result_.resize(v1_.size()) ;
+			result.resize(v1_.size()) ;
 
-			float sendDuration = (endTime - startTime) * 1000;
+			sendDuration = (endTime - startTime) * 1000;
 
 			startTime = MPI_Wtime();
 			MPI_Igatherv(
 					NULL, 
 					0, 
 					MPI_FLOAT, 
-					&result_[0], 
+					&result[0], 
 					&numDataPerProcess_[0], 
 					&displacementIndices_[0], 
 					MPI_FLOAT, 
@@ -265,9 +267,9 @@ class MPI_Master: public MPI_TEST{
 
 			endTime = MPI_Wtime();
 
-			float recvDuration = (endTime - startTime)*1000 ;
+			recvDuration = (endTime - startTime)*1000 ;
 
-			checkResult(result_);
+			checkResult(result);
 
 			return std::pair<float, float>(sendDuration, recvDuration);
 
@@ -328,9 +330,9 @@ class MPI_Master: public MPI_TEST{
 
 			float endTime = MPI_Wtime();
 
-			float sendDuration = (endTime - startTime) * 1000;
+			sendDuration = (endTime - startTime) * 1000;
 
-			result_.resize(v1_.size()) ;
+			result.resize(v1_.size()) ;
 
 			startTime = MPI_Wtime();
 
@@ -338,7 +340,7 @@ class MPI_Master: public MPI_TEST{
 			for (int i = 1; i < size_; i++) {
 				int curSize = batchSize + ((extraBatches >= i)? 1 : 0) ; //size of cur Batch
 
-				//receiving the result_ of adding v1 to v2
+				//receiving the result of adding v1 to v2
 				MPI_Sendrecv( 
 						/*sending buf*/ NULL,
 						/*send count*/  0 , 		
@@ -346,7 +348,7 @@ class MPI_Master: public MPI_TEST{
 						/*dst*/		i, /*root*/    
 						/*send tag*/	2,/*worker tag*/
 
-						/*recv buf*/	&result_[curIdx],	
+						/*recv buf*/	&result[curIdx],	
 						/*recv count*/	curSize,	
 						/*recv type*/	MPI_FLOAT,	
 						/*src*/         i,/*worker*/	
@@ -360,9 +362,9 @@ class MPI_Master: public MPI_TEST{
 			}
 
 			endTime = MPI_Wtime();
-			float recvDuration = (endTime - startTime)*1000 ;
+			recvDuration = (endTime - startTime)*1000 ;
 
-			checkResult(result_);
+			checkResult(result);
 			return std::pair<float, float>(sendDuration, recvDuration);
 
 		}//end of blockingSendRecv
@@ -371,8 +373,8 @@ class MPI_Master: public MPI_TEST{
 		std::pair<float, float> oneSidedCommMaster() override { //ROOT
 			int vec_size = v1_.size();
 			int batchSize = v1_.size() / (size_ - 1); //the size for each process execluding root
-			//the size for the batches thatll get the extra (%) execluding root
-			int extraBatches = v1_.size() % (size_ - 1);
+                        //the size for the batches thatll get the extra (%) execluding root
+                        int extraBatches = v1_.size() % (size_ - 1);
 			//sending the size to multi workers 
 			int curIdx = 0; 
 			for(int i=1;i<size_;i++){
@@ -382,9 +384,9 @@ class MPI_Master: public MPI_TEST{
 				curIdx += curSize;
 			}
 
-
-			//resize the result_ vec 
-			result_.resize(v1_.size());
+			
+			//resize the result vec 
+			result.resize(v1_.size());
 
 			//////////////////// creating a window //////////////////////
 			MPI_Win win1;
@@ -412,27 +414,27 @@ class MPI_Master: public MPI_TEST{
 			MPI_Win_fence(0,win1);
 			//fence 4
 			MPI_Win_fence(0,win2);
-
+		
 			///////////////////////// end of sending the data /////////////////////////////
 
 			//ending the time 
 			float endTime = MPI_Wtime();
-			float sendDuration = (endTime - startTime) * 1000;
-
+			sendDuration = (endTime - startTime) * 1000;
+			
 			///////////////////////// getting the data from workers ////////////////////////
-
+			
 			//starting the time for receiving 
 			startTime = MPI_Wtime();
-
+			
 			//fence 5 
 			MPI_Win_fence(0,win1);
-
-			//getting the result_ from worker	
+			
+			//getting the result from worker	
 			curIdx = 0; 
 			for(int i=1; i<size_; i++){
 				int curSize = batchSize + ((extraBatches >= i)? 1 : 0) ; //size of cur Batch
-				//getting result_s from multi workers
-				MPI_Get(&result_[curIdx],curSize,MPI_FLOAT,i,0,curSize,MPI_FLOAT,win1);
+				//getting results from multi workers
+				MPI_Get(&result[curIdx],curSize,MPI_FLOAT,i,0,curSize,MPI_FLOAT,win1);
 				curIdx += curSize;
 			}
 
@@ -440,11 +442,11 @@ class MPI_Master: public MPI_TEST{
 			MPI_Win_fence(0,win1);
 			//ending the time of receiving  
 			endTime = MPI_Wtime();
-			float recvDuration = (endTime - startTime)*1000 ;
-
+			recvDuration = (endTime - startTime)*1000 ;
+			
 			//////////////////////////// ending getting the data //////////////////////////// 
-
-			checkResult(result_); //check result_
+			
+			checkResult(result); //check result
 			MPI_Win_free(&win1); //freeing the window
 			MPI_Win_free(&win2); //freeing the window
 			return std::pair<float, float>(sendDuration, recvDuration);
@@ -453,74 +455,145 @@ class MPI_Master: public MPI_TEST{
 
 
 
-		std::pair<float, float> oneSidedCommWorker() override {
-			// Send input data from root process to worker processes.
-			// sending vec size
-			int vec_size = v1_.size();
-			//sending the size to multi workers
-			for(int i=1;i<size_;i++)
-				MPI_Send(&vec_size,1,MPI_INT,i,0,MPI_COMM_WORLD);
+                std::pair<float, float> oneSidedCommWorker() override {
+                        // Send input data from root process to worker processes.
+                        // sending vec size
+                        int vec_size = v1_.size();
+                        //sending the size to multi workers
+                        for(int i=1;i<size_;i++)
+                                MPI_Send(&vec_size,1,MPI_INT,i,0,MPI_COMM_WORLD);
 
-			//resize the result_ vec
-			result_.resize(v1_.size());
+                        //resize the result vec
+                        result.resize(v1_.size());
 			for(int i = 0; i < v1_.size(); i++){
-				result_[i] = v1_[i] ; 
+				result[i] = v1_[i] ; 
 			}
-			//////////////////// creating a window //////////////////////
+                        //////////////////// creating a window //////////////////////
 			MPI_Win win1;
-			MPI_Win_create(&v1_[0],vec_size*sizeof(float),sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win1);
-			//fence 1
-			MPI_Win_fence(0,win1);
-			MPI_Win win2;
-			MPI_Win_create(&v2_[0],vec_size*sizeof(float),sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win2);
-			//fence 2 
-			MPI_Win_fence(0,win2);
-			//////////////////// end creating window ///////////////////
+                        MPI_Win_create(&v1_[0],vec_size*sizeof(float),sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win1);
+                        //fence 1
+                        MPI_Win_fence(0,win1);
+                        MPI_Win win2;
+                        MPI_Win_create(&v2_[0],vec_size*sizeof(float),sizeof(float),MPI_INFO_NULL,MPI_COMM_WORLD,&win2);
+                        //fence 2 
+                        MPI_Win_fence(0,win2);
+                        //////////////////// end creating window ///////////////////
 
 
-			//starting the time of sending
-			float startTime = MPI_Wtime();
+                        //starting the time of sending
+                        float startTime = MPI_Wtime();
 
-			////////////////////// worker gets data from root  /////////////////////////
-			//fence 3
+                        ////////////////////// worker gets data from root  /////////////////////////
+                        //fence 3
 			MPI_Win_fence(0,win1);
 			//fence 4
-			MPI_Win_fence(0,win2);
-			///////////////////////// end of sending the data /////////////////////////////
+                        MPI_Win_fence(0,win2);
+                        ///////////////////////// end of sending the data /////////////////////////////
 
-			//ending the time
-			float endTime = MPI_Wtime();
-			float sendDuration = (endTime - startTime) * 1000;
+                        //ending the time
+                        float endTime = MPI_Wtime();
+                        sendDuration = (endTime - startTime) * 1000;
 
-			///////////////////////// getting the data from workers ////////////////////////
+                        ///////////////////////// getting the data from workers ////////////////////////
 
 			//fence 5
-			MPI_Win_fence(0,win1); //unnecessary, I assume time measurement is more accurate this way. 
-			//starting the time for receiving
-			startTime = MPI_Wtime();
+                        MPI_Win_fence(0,win1); //unnecessary, I assume time measurement is more accurate this way. 
+                        //starting the time for receiving
+                        startTime = MPI_Wtime();
 
-			// worker to put data after processing in v1_
-			//fence 6
+                        // worker to put data after processing in v1_
+                        //fence 6
 			MPI_Win_fence(0,win1);
 
 
-			//ending the time of receiving
-			endTime = MPI_Wtime();
-			float recvDuration = (endTime - startTime)*1000 ;
-			//////////////////////////// ending getting the data //////////////////////////// 
+                        //ending the time of receiving
+                        endTime = MPI_Wtime();
+                        recvDuration = (endTime - startTime)*1000 ;
+                        //////////////////////////// ending getting the data //////////////////////////// 
 			for(int i = 0; i < v1_.size(); i++){
-				float x = result_[i]; 
-				result_[i] = v1_[i]; 
+				float x = result[i]; 
+				result[i] = v1_[i]; 
 				v1_[i] = x; 
 			}
-			checkResult(result_); //check result_
-			MPI_Win_free(&win1); //freeing the window
-			MPI_Win_free(&win2); //freeing the window
-			return std::pair<float, float>(sendDuration, recvDuration);
+                        checkResult(result); //check result
+                        MPI_Win_free(&win1); //freeing the window
+                        MPI_Win_free(&win2); //freeing the window
+                        return std::pair<float, float>(sendDuration, recvDuration);
 
-		}//end of oneSidedComm
-
-
+                }//end of oneSidedComm
 
 
+				
+		private:
+		const int precisionFactor = 4;
+		std::vector<float> v1_;
+		std::vector<float> v2_;
+		std::vector<float> result ;
+		int size_;          //num of process
+		int rank_;          //rank of process - HERE its always zero
+		float sendDuration;
+		float recvDuration;
+
+		void generateRandomData(int vectorSize) {
+
+			std::random_device rand;  // Random device used to seed the random engine.
+			std::default_random_engine gener(rand());  // Default random engine.
+			std::uniform_real_distribution<> dis(0., 1.);  // Uniform distribution from 0 to 1.
+			// Generate a random number and assign it to the vector element.
+			for (int i = 0; i < vectorSize; i++) {
+				v1_.push_back(dis(gener));
+				v2_.push_back(dis(gener));
+				//validationReference_.push_back(mainInput1_[i] + mainInput2_[i]);
+			}
+			
+		}
+
+		void checkResult(std::vector<float> resultVect){
+
+			float totalError{0.0};  // Variable to store the total error.
+
+
+			// Calculate the percentage difference and accumulate the total error.
+			for (int i = 0; i < resultVect.size(); i++) {
+				float s = v1_[i] + v2_[i];
+				totalError += ((s - resultVect[i]) / s) * 100.0;
+			}
+
+			// If there is a non-zero total error, print the results and error analysis.    
+			if ( totalError == 0.0) {
+				return ; // No error Found;
+			}
+
+			std::cout << "\n-------------------------------------------------------\n";
+			std::cout << "| RootSum | WorksSum | Error   | Error %  | Process # |";
+			std::cout << "\n-------------------------------------------------------\n";
+			std::cout.precision(precisionFactor);
+
+
+
+			int batchSize = v1_.size() / (size_ - 1);  //execluding root
+			int extraBatches = v1_.size() % (size_ - 1); //execluding root
+			int curBatchSize = batchSize + (extraBatches > 0)? 1 : 0;
+			int workerRank = 0;
+			for (int i = 0; i < resultVect.size(); i++) {
+				float correct = v1_[i] + v2_[i];
+				float error = correct-resultVect[i] ;
+				if(error != 0.0) {
+					float errorPercent = (error/correct)*100.0 ;
+					std::cout << "| " << correct << "  | " << resultVect[i] << "  |"
+						<< std::setw(9) << error << " |"
+						<< std::setw(9) << errorPercent << " |"
+						<< std::setw(9) << workerRank << " |\n";
+				}
+				if(i > curBatchSize){
+					workerRank += 1;
+					curBatchSize = batchSize + (extraBatches - workerRank > 0)? 1 : 0;
+				}
+
+			}
+
+			std::cout << "-------------------------------------------------------\n";
+			std::cout << "Total Error = " << totalError << std::endl;
+
+		}
 		};

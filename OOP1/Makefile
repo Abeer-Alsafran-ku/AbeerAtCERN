@@ -12,26 +12,26 @@ pull:
 	git pull
 one:
 	mpicxx mainoop.cc -o main
-	mpirun -n 15 main -s 1000000 -f 1 -i 10000
+	mpirun -n 6 main -s 100 -f 1 -i 10
 two:
 	mpicxx mainoop.cc -o main2
-	mpirun -n 15 main2 -s 1000000 -f 2 -i 10000
+	mpirun -n 6 main2 -s 100 -f 2 -i 10
 three:
 	mpicxx mainoop.cc -o main3
-	mpirun -n 15 main3 -s 1000000 -f 3 -i 10000
+	mpirun -n 6 main3 -s 100 -f 3 -i 10
 four:
 	mpicxx mainoop.cc -o main4
-	mpirun -n 15 main4 -s 1000000 -f 4 -i 10000
+	mpirun -n 6 main4 -s 100 -f 4 -i 10
 #master
 five:
 	mpicxx mainoop.cc -o main5
-	mpirun -n 15 main5 -s 1000000 -f 5 -i 10000 
+	mpirun -n 6 main5 -s 100 -f 5 -i 10 
 six:
 	mpicxx mainoop.cc -o main6
-	mpirun -n 15 main6 -s 1000000 -f 6 -i 10000
+	mpirun -n 6 main6 -s 100 -f 6 -i 10
 #worker
 seven:
 	mpicxx mainoop.cc -o main7
-	mpirun -n 15 main7 -s 1000000 -f 7 -i 10000 
+	mpirun -n 6 main7 -s 100 -f 7 -i 10 
 clean:
 	rm ${EXECS}

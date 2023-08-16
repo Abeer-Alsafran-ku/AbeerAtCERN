@@ -1,0 +1,2 @@
+Communication Method,Scatter/Send,Gather/Receive,Iterations,Vector Size,Processes
+ONE SIDED WORKER,0.0200264,0.00701427,10,100,6

@@ -1,0 +1,2 @@
+CommunicationMethod,Scatter/Send,Gather/Receive,Iterations,VectorSize,Processes
+ONE_SIDED_MASTER,0.0226198,0.01495,10,100,6
