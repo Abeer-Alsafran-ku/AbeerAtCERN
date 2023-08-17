@@ -12,7 +12,7 @@ pull:
 	git pull
 one:
 	mpicxx mainoop.cc -o main
-	mpirun -n 15 main -s 1000000 -f 1 -i 10000
+	mpirun -n 2 main -s 10 -f 12 -i 10
 two:
 	mpicxx mainoop.cc -o main2
 	mpirun -n 15 main2 -s 1000000 -f 2 -i 10000

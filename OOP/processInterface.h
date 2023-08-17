@@ -2,7 +2,8 @@
 #define PROCESSINTERFACE_H
 
 #include<vector>
-
+#include <unistd.h>
+#include <fcntl.h>
 class MPI_TEST{
 	public:
 		int size_ ;
@@ -159,7 +160,7 @@ class MPI_TEST{
 			const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV","ONE SIDED MASTER", "BLOCKING SENDRECV","ONE SIDED WORKER"};
 			const auto COL1 = 25, COL2 = 15, COL3 = 15, COL4 = 11;
 			std::string ROW    = "============================================================================================================";
-			std::string DASHES = "--------------------------------------------------------------------------------";
+			std::string DASHES = "------------------------------------------------------------------------------------------------------------";
 			std::cout.flags(std::ios::fixed | std::ios::showpoint);
 			std::cout.setf(std::ios::fixed, std::ios::floatfield);
 			std::cout.precision(4);
@@ -201,7 +202,7 @@ class MPI_TEST{
 			const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV","ONE SIDED MASTER", "BLOCKING SENDRECV","ONE SIDED WORKER"};
 			const auto COL1 = 25, COL2 = 15, COL3 = 15, COL4 = 11;
 			std::string ROW    = "============================================================================================================";
-			std::string DASHES = "--------------------------------------------------------------------------------";
+			std::string DASHES = "------------------------------------------------------------------------------------------------------------";
 			std::cout.flags(std::ios::fixed | std::ios::showpoint);
 			std::cout.setf(std::ios::fixed, std::ios::floatfield);
 			std::cout.precision(4);
@@ -253,45 +254,48 @@ class MPI_TEST{
 			/*Printing to the file*/
 			const std::string  COMM_METHOD_NAMES[] = {"NONBLOCKING SCATTER", "BLOCKING SCATTER", "BLOCKING SEND/RECV", "NONBLOCKING SEND/RECV","ONE SIDED MASTER", "BLOCKING SENDRECV","ONE SIDED WORKER"};
 			std::fstream fd;
-			if (COMM_METHOD_NAMES[inputNum-1] == "NONBLOCKING SCATTER"){
-				fd.open("NB_scatter.csv", std::fstream::in | std::fstream::out | std::fstream::app);
-			}
-			else if (COMM_METHOD_NAMES[inputNum-1] == "BLOCKING SCATTER"){
-				fd.open("B_scatter.csv", std::fstream::in | std::fstream::out | std::fstream::app);
-			}
-			else if (COMM_METHOD_NAMES[inputNum-1] == "BLOCKING SEND/RECV"){
-				fd.open("B_send_Recv.csv", std::fstream::in | std::fstream::out | std::fstream::app);
-			}
-			else if (COMM_METHOD_NAMES[inputNum-1] == "NONBLOCKING SEND/RECV"){
-				fd.open("NB_send_Recv.csv", std::fstream::in | std::fstream::out | std::fstream::app);
-			}
-			else if (COMM_METHOD_NAMES[inputNum-1] == "BLOCKING SENDRECV"){
-				fd.open("B_sendRecv.csv", std::fstream::in | std::fstream::out | std::fstream::app);
-			}
-			else if (COMM_METHOD_NAMES[inputNum-1] == "ONE SIDED MASTER" ){
+			int c = 0 ; 
+			while(inputNum > 0){
+				int digit = inputNum % 10;
+				inputNum /= 10;
+				auto [commMethod, avgSendTime, avgRecvTime] = executionTimes[c];
+				c += 1;
+				if (COMM_METHOD_NAMES[digit-1] == "NONBLOCKING SCATTER"){
+					fd.open("NB_scatter.csv", std::fstream::in | std::fstream::out | std::fstream::app);
+					
+				}
+				else if (COMM_METHOD_NAMES[digit-1] == "BLOCKING SCATTER"){
+					fd.open("B_scatter.csv", std::fstream::in | std::fstream::out | std::fstream::app);
+				}
+				else if (COMM_METHOD_NAMES[digit-1] == "BLOCKING SEND/RECV"){
+					fd.open("B_send_Recv.csv", std::fstream::in | std::fstream::out | std::fstream::app);
+				}
+				else if (COMM_METHOD_NAMES[digit-1] == "NONBLOCKING SEND/RECV"){
+					fd.open("NB_send_Recv.csv", std::fstream::in | std::fstream::out | std::fstream::app);
+				}
+				else if (COMM_METHOD_NAMES[digit-1] == "BLOCKING SENDRECV"){
+					fd.open("B_sendRecv.csv", std::fstream::in | std::fstream::out | std::fstream::app);
 
-				fd.open("NB_oneSidedM.csv", std::fstream::in | std::fstream::out | std::fstream::app);
-			}
-			else if (COMM_METHOD_NAMES[inputNum-1] == "ONE SIDED WORKER" ){
+				}
+				else if (COMM_METHOD_NAMES[digit-1] == "ONE SIDED MASTER" ){
+					fd.open("NB_oneSidedM.csv", std::fstream::in | std::fstream::out | std::fstream::app);
 
-				fd.open("NB_oneSidedW.csv", std::fstream::in | std::fstream::out | std::fstream::app);
-			}
-			else{
-				std::cout<< "File name not found!\n";
-			}
+				}
+				else if (COMM_METHOD_NAMES[digit-1] == "ONE SIDED WORKER" ){
+					fd.open("NB_oneSidedW.csv", std::fstream::in | std::fstream::out | std::fstream::app);
+				}
+				else{
+					std::cout<< "File name not found!\n";
+				}
+				if( !fd ){ //file cannot be opened 
+					std::cout<<"File Cannot be opened!\n";
+					exit(0);
+				}
 
-			if( !fd ){ //file cannot be opened 
-				std::cout<<"File Cannot be opened!\n";
-				exit(0);
-			}
-			else{ //file is opened 
-				//write to the file the results
 				fd.seekg(0, std::ios::end); //seek the end of the file 
 				int file_size = fd.tellg();
-
 				if (file_size == 0) //first time to open and write to a file 
 				{
-
 					fd <<"Communication Method"<<","
 						<<"Scatter/Send"<< ","
 						<<"Gather/Receive"<<","
@@ -300,35 +304,26 @@ class MPI_TEST{
 						<<"Processes"
 						<< "\n";
 					// Print the execution times and related information
-					for (int i = 0; i < executionTimes.size(); ++i) {
-						auto [commMethod, avgSendTime, avgRecvTime] = executionTimes[i];
-						fd << COMM_METHOD_NAMES[commMethod-1] << ","
-							<< avgSendTime << ","
-							<< avgRecvTime << ","
-							<< iterations << ","
-							<< vecSize<< ","
-							<<size ;
-					}
+					fd<< COMM_METHOD_NAMES[commMethod-1] << ","
+						<< avgSendTime << ","
+						<< avgRecvTime << ","
+						<< iterations << ","
+						<< vecSize<< ","
+						<<size ;
+
 				}
 				else{ //not the first time i.e. data exist in the file 
-					// Print the execution times and related information
-					for (int i = 0; i < executionTimes.size(); ++i) {
-						auto [commMethod, avgSendTime, avgRecvTime] = executionTimes[i];
-						fd << COMM_METHOD_NAMES[commMethod-1] << ","
-							<< avgSendTime << ","
-							<< avgRecvTime << ","
-							<< iterations << ","
-							<< vecSize<<","
-							<< size;
-					}
-
+					fd<< COMM_METHOD_NAMES[commMethod-1] << ","
+						<< avgSendTime << ","
+						<< avgRecvTime << ","
+						<< iterations << ","
+						<< vecSize<<","
+						<< size;
 				}
-			}
-			fd << "\n";
-			fd.close();
-		}//end of printCSV 
-
-
+				fd<<"\n"; 
+				fd.close();
+		}//end while 
+}//end of printCSV 
 
 };
 
