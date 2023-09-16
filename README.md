@@ -60,8 +60,9 @@ Or:
 * make two <- for running the blockingScatter()
 * make three <- for running the nonBlockingSend()
 * make four <- for running the blockingSend()
+* make five <- for running the oneSidedCommMaster()
 * make six <- for running the blockingSendrecv()
-* make seven <- for running the oneSidedComm()
+* make seven <- for running the oneSidedCommWorker()
   
 ## Notes:
 * Please adapt the implementation according to your needs for optimal utility.
